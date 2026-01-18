@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prim's Algorithm Animation</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      height: 100%;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f8f9fa;
+    }
+    #graph-container {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 800px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #controls {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 240px;
+    }
+    #controls button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #controls button:hover {
+      background: #0056b3;
+    }
+    #input-fields {
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+    }
+    #input-fields input {
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    #goBtn {
+      background: #28a745;
+    }
+    #goBtn:hover {
+      background: #1e7e34;
+    }
+    #operations-log {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 300px;
+      height: 100%;
+      background: #ffffff;
+      overflow-y: auto;
+      border-left: 2px solid #dee2e6;
+      padding: 20px 15px;
+      font-size: 14px;
+      font-family: 'Courier New', Courier, monospace;
+      color: #212529;
+    }
+    .log-entry {
+      background-color: #f8f9fa;
+      border-left: 4px solid #17a2b8;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    .log-entry strong {
+      color: #343a40;
+    }
+    #caption {
+      margin-top: 20px;
+      background: #343a40;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      text-align: center;
+    }
+    #playPauseContainer {
+      position: absolute;
+      top: 530px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #playPauseBtn {
+      width: 60px;
+      height: 60px;
+      background: #1db954;
+      border: none;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+      transition: background 0.2s;
+    }
+    #playPauseBtn:hover {
+      background: #1aa34a;
+    }
+    .icon {
+      fill: white;
+      width: 20px;
+      height: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div id="graph-container">
+    <canvas id="graph-canvas" width="800" height="600"></canvas>
+    <div id="caption">Click the button to begin Prim's Algorithm</div>
+    <div id="playPauseContainer">
+      <button id="playPauseBtn">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="controls">
+    <button id="setStartGoalBtn">Set Start and Goal State</button>
+    <div id="input-fields">
+      <input type="text" id="start-node" placeholder="Start Node" />
+      <input type="text" id="goal-node" placeholder="Goal Node" />
+      <button id="goBtn">Go</button>
+    </div>
+  </div>
+
+  <div id="operations-log"></div>
+
+  <script>
+    const canvas = document.getElementById("graph-canvas");
+    const ctx = canvas.getContext("2d");
+    const startGoalBtn = document.getElementById('setStartGoalBtn');
+    const inputFields = document.getElementById('input-fields');
+    const goBtn = document.getElementById('goBtn');
+    const operationsLog = document.getElementById('operations-log');
+    const caption = document.getElementById('caption');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    let isPaused = true;
+    let animationRunning = false;
+    let currentStart = null;
+    let currentGoal = null;
+
+    startGoalBtn.addEventListener('click', () => {
+      inputFields.style.display = inputFields.style.display === 'flex' ? 'none' : 'flex';
+    });
+
+    function logOperation(message) {
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.innerHTML = message;
+      operationsLog.appendChild(entry);
+      operationsLog.scrollTop = operationsLog.scrollHeight;
+    }
+
+    function updateCaption(text) {
+      caption.textContent = text;
+    }
+
+    const nodes = [
+      { id: 'A', x: 100, y: 100 },
+      { id: 'B', x: 300, y: 100 },
+      { id: 'C', x: 500, y: 100 },
+      { id: 'D', x: 200, y: 250 },
+      { id: 'E', x: 400, y: 250 },
+      { id: 'F', x: 100, y: 400 },
+      { id: 'G', x: 300, y: 400 },
+      { id: 'H', x: 500, y: 400 }
+    ];
+
+    const edges = [
+      { from: 'A', to: 'B', weight: 4 },
+      { from: 'A', to: 'D', weight: 2 },
+      { from: 'B', to: 'C', weight: 6 },
+      { from: 'B', to: 'E', weight: 3 },
+      { from: 'C', to: 'E', weight: 1 },
+      { from: 'D', to: 'E', weight: 5 },
+      { from: 'D', to: 'F', weight: 8 },
+      { from: 'E', to: 'G', weight: 7 },
+      { from: 'F', to: 'G', weight: 2 },
+      { from: 'G', to: 'H', weight: 4 },
+      { from: 'E', to: 'H', weight: 3 }
+    ];
+
+    function drawGraph(highlightedEdges = [], highlightNodes = []) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      edges.forEach(edge => {
+        const from = nodes.find(n => n.id === edge.from);
+        const to = nodes.find(n => n.id === edge.to);
+        const isHighlighted = highlightedEdges.includes(edge);
+        ctx.beginPath();
+        ctx.moveTo(from.x, from.y);
+        ctx.lineTo(to.x, to.y);
+        ctx.strokeStyle = isHighlighted ? '#00f' : '#aaa';
+        ctx.lineWidth = isHighlighted ? 4 : 1;
+        ctx.stroke();
+        const midX = (from.x + to.x) / 2;
+        const midY = (from.y + to.y) / 2;
+        ctx.fillStyle = 'black';
+        ctx.fillText(edge.weight, midX, midY);
+      });
+
+      nodes.forEach(node => {
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, 20, 0, Math.PI * 2);
+        ctx.fillStyle = highlightNodes.includes(node.id) ? 'orange' : '#ff69b4';
+        ctx.fill();
+        ctx.fillStyle = 'white';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = 'bold 14px sans-serif';
+        ctx.fillText(node.id, node.x, node.y);
+      });
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function runPrims(startId) {
+      const visited = new Set();
+      const edgeList = [...edges];
+      const mst = [];
+      visited.add(startId);
+      updateCaption(`Starting from node ${startId}`);
+      logOperation(`<strong>Start from node ${startId}</strong>`);
+
+      while (visited.size < nodes.length) {
+        while (isPaused) await sleep(100);
+
+        const candidates = edgeList.filter(e => (visited.has(e.from) && !visited.has(e.to)) || (visited.has(e.to) && !visited.has(e.from)));
+        if (candidates.length === 0) break;
+
+        candidates.sort((a, b) => a.weight - b.weight);
+        const best = candidates[0];
+        const highlightNode = visited.has(best.from) ? best.to : best.from;
+
+        drawGraph(mst, [highlightNode]);
+        updateCaption(`Considering edge ${best.from}-${best.to} with weight ${best.weight}`);
+        logOperation(`Checking edge ${best.from}-${best.to}, weight = ${best.weight}`);
+        await sleep(3000);
+        while (isPaused) await sleep(100);
+
+        if (visited.has(best.from) && visited.has(best.to)) {
+          updateCaption(`Edge ${best.from}-${best.to} creates a loop, skipping.`);
+          logOperation(`<em>Skipping ${best.from}-${best.to} to avoid cycle.</em>`);
+          edgeList.splice(edgeList.indexOf(best), 1);
+          continue;
+        }
+
+        mst.push(best);
+        visited.add(best.from);
+        visited.add(best.to);
+        drawGraph(mst);
+        updateCaption(`Added edge ${best.from}-${best.to} to MST`);
+        logOperation(`--> Edge ${best.from}-${best.to} added to MST. Visited: ${[...visited].join(', ')}`);
+        await sleep(3000);
+      }
+      const totalCost = mst.reduce((sum, e) => sum + e.weight, 0);
+      logOperation(`<strong>Total Cost of MST:</strong> ${totalCost}`);
+
+      updateCaption("Prim's Algorithm complete.");
+      logOperation(`<strong>Prim's Algorithm completed.</strong>`);
+    }
+
+    goBtn.addEventListener('click', () => {
+      const start = document.getElementById('start-node').value.trim();
+      const goal = document.getElementById('goal-node').value.trim();
+
+      currentStart = nodes.some(n => n.id === start) ? start : 'A';
+      currentGoal = nodes.some(n => n.id === goal) ? goal : 'H';
+
+      logOperation(`<strong>Start:</strong> ${currentStart}, <strong>Goal:</strong> ${currentGoal}`);
+
+      if (!animationRunning) {
+        isPaused = false;
+        updatePlayPauseIcon();
+        animationRunning = true;
+        runPrims(currentStart).then(() => {
+          animationRunning = false;
+          isPaused = true;
+          updatePlayPauseIcon();
+        });
+      }
+    });
+
+    function updatePlayPauseIcon() {
+      playPauseBtn.innerHTML = isPaused
+        ? '<svg class="icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>'
+        : '<svg class="icon" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+    }
+
+    playPauseBtn.addEventListener('click', () => {
+      if (!animationRunning) {
+        // Treat as clicking "Go"
+        goBtn.click();
+      } else {
+        isPaused = !isPaused;
+        updatePlayPauseIcon();
+      }
+    });
+
+    drawGraph();
+    updateCaption("Waiting for user to start Prim's algorithm...");
+    logOperation("System initialized with default graph.");
+  </script>
+</body>
+</html>

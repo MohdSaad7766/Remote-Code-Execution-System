@@ -1,0 +1,58 @@
+.social-icons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    padding: 20px;
+   
+    /* background-color: rgb(61, 149, 226); */
+}
+
+.icon-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    text-decoration: none;
+    color: inherit;
+    width: 130px;
+    border-radius: 50%;
+    
+    
+}
+
+.icon {
+    font-size: 20px; /* Adjust icon size */
+    border-radius: 50%;
+    background: transparent;
+    padding: 20px;
+    width: 40px;
+    box-shadow: 0px 0px 5px rgb(174, 174, 174);
+    height: 40px;
+
+    /* box-shadow: 0 2px 10px rgba(43, 44, 43, 0.2); */
+}
+
+.youtube {
+    color: red;
+}
+.linkedin {
+    color: #0077b5;
+}
+.discord {
+    color: #7289DA;
+}
+.telegram {
+    color: #0088cc;
+}
+
+.icon-text {
+    margin-top: 10px;
+    font-size: 16px; /* Adjust text size */
+    font-weight: 500;
+}
+.icon:hover{
+    font-size: 50px !important;
+    padding: 25px;
+    box-shadow: 2px 2px 10px rgb(157, 156, 156);
+    transition: all 0.3s ease-in-out;
+}

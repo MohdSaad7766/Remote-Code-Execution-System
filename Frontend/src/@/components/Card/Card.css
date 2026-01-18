@@ -1,0 +1,52 @@
+/* Card.css */
+.card {
+    position: relative;
+    background-color: rgb(3, 1, 36);
+    border-radius: 0.5rem;
+    display: flex;
+    /* width:1200px; */
+    height: auto;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    /* padding: 20px; */
+    box-shadow: 0 0 10px rgba(101, 100, 100, 0.5);
+}
+
+@media (min-width: 768px) {
+    .card {
+        flex-direction: row;
+    }
+}
+
+.card::before, .card::after {
+    content: "";
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: 10px;
+    background: linear-gradient(235deg, #efef09, #4370f8, #00bcd4);
+    z-index: -1;
+}
+
+.card::after {
+    inset: 10px;
+    background: #fff;
+    filter: blur(20px);
+    z-index: -2;
+}
+
+.card-content {
+    padding: 20px;
+    box-sizing: border-box;
+    color: black;
+    text-align: center;
+}
+
+@media (min-width: 768px) {
+    .card-content {
+        text-align: left;
+    }
+}

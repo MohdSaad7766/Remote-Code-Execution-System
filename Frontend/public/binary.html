@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Binary Search Animation</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #f1f1f1;
+    }
+    .container {
+      padding: 20px;
+      text-align: center;
+    }
+    .array {
+      display: flex;
+      justify-content: center;
+      margin-top: 200px;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .cell {
+      width: 40px;
+      height: 40px;
+      border: 2px solid #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      background: white;
+      position: relative;
+      transition: background 0.5s ease, opacity 1s ease;
+    }
+    .index {
+      position: absolute;
+      bottom: -20px;
+      font-size: 14px;
+      color: red;
+    }
+    .highlight {
+      background-color: yellow !important;
+    }
+    .panel {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      background: #d04b6e;
+      padding: 10px;
+      width: 240px;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .panel-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .panel button {
+      width: 100%;
+      padding: 6px;
+      border: none;
+      background: #e06a85;
+      color: white;
+      cursor: pointer;
+    }
+    .input-section {
+      display: none;
+      flex-direction: column;
+      gap: 4px;
+      background-color: #fff;
+      padding: 6px;
+      border-radius: 4px;
+      color: black;
+    }
+    .input-section input {
+      padding: 4px;
+    }
+    .input-section button {
+      background: #d04b6e;
+      color: white;
+      cursor: pointer;
+      padding: 5px;
+      border: none;
+    }
+    #caption {
+      font-size: 18px;
+      color: #333;
+      margin-top: 80px;
+      min-height: 24px;
+      transition: opacity 0.3s ease;
+    }
+    .fade-out {
+      opacity: 0.1;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="array" id="arrayContainer"></div>
+    <div id="caption"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-group">
+      <button onclick="toggleSection('createSection')">Create & Search</button>
+      <div class="input-section" id="createSection">
+        <input id="customInput" placeholder="e.g. 1,2,3,4,5" />
+        <input id="customSearchValue" placeholder="Search value" />
+        <button onclick="createCustomArray()">Go</button>
+      </div>
+
+      <button onclick="toggleSection('searchSection')">Search</button>
+      <div class="input-section" id="searchSection">
+        <input id="defaultSearchValue" placeholder="Search value" />
+        <button onclick="searchDefaultArray()">Go</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let array = [1, 4, 8, 13, 16, 23, 30, 45, 67, 80, 91, 120]; // Default Array
+    const arrayContainer = document.getElementById('arrayContainer');
+    const caption = document.getElementById('caption');
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function renderArray(visibleRange = null) {
+      arrayContainer.innerHTML = '';
+      array.forEach((value, index) => {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        if (visibleRange && !visibleRange.includes(index)) {
+          cell.classList.add('fade-out');
+        }
+        cell.innerHTML = value;
+        const indexEl = document.createElement('div');
+        indexEl.className = 'index';
+        indexEl.innerText = index;
+        cell.appendChild(indexEl);
+        arrayContainer.appendChild(cell);
+      });
+    }
+
+    async function binarySearchAnimation(target) {
+  let left = 0;
+  let right = array.length - 1;
+  while (left <= right) {
+    renderArray(Array.from({length: array.length}, (_, i) => i).slice(left, right + 1));
+    let mid = Math.floor((left + right) / 2);
+    await sleep(800); // slow pause before highlighting
+    highlightCell(mid);
+    caption.innerText = `Checking index ${mid} (value: ${array[mid]})`;
+    await sleep(1200); // hold highlight for longer
+    if (array[mid] === target) {
+      caption.innerText = `Value ${target} found at index ${mid}!`;
+      return;
+    } else if (array[mid] < target) {
+      caption.innerText = `Value ${target} is greater than ${array[mid]}, searching right half.`;
+      left = mid + 1;
+    } else {
+      caption.innerText = `Value ${target} is less than ${array[mid]}, searching left half.`;
+      right = mid - 1;
+    }
+    await sleep(1800); // give time for caption before next step
+  }
+  caption.innerText = `Value ${target} not found in the array.`;
+  renderArray([]); // fade all out
+}
+
+
+    function highlightCell(index) {
+      const cells = document.querySelectorAll('.cell');
+      cells[index].classList.add('highlight');
+      setTimeout(() => {
+        cells[index].classList.remove('highlight');
+      }, 1000);
+    }
+
+    function createCustomArray() {
+      const input = document.getElementById('customInput').value;
+      const searchVal = parseInt(document.getElementById('customSearchValue').value);
+      const values = input.split(',').map(v => parseInt(v.trim())).filter(v => !isNaN(v));
+      array = values.slice(0, 16).sort((a, b) => a - b);
+      caption.innerText = '';
+      renderArray(Array.from({length: array.length}, (_, i) => i));
+      if (!isNaN(searchVal)) {
+        setTimeout(() => binarySearchAnimation(searchVal), 500);
+      }
+    }
+
+    function searchDefaultArray() {
+      const searchVal = parseInt(document.getElementById('defaultSearchValue').value);
+      caption.innerText = '';
+      renderArray(Array.from({length: array.length}, (_, i) => i)); // Make all cells visible
+      if (!isNaN(searchVal)) {
+        setTimeout(() => binarySearchAnimation(searchVal), 500);
+      }
+    }
+
+    function toggleSection(sectionId) {
+      const sections = document.querySelectorAll('.input-section');
+      sections.forEach(section => {
+        if (section.id === sectionId) {
+          section.style.display = section.style.display === 'flex' ? 'none' : 'flex';
+        } else {
+          section.style.display = 'none';
+        }
+      });
+    }
+
+    // Render full default array at the start
+    renderArray(Array.from({length: array.length}, (_, i) => i));
+  </script>
+</body>
+</html>

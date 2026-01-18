@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bubble Sort Animation</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    header h1 {
+      font-size: 2.5rem;
+      margin: 0;
+    }
+
+    header p {
+      font-size: 1.2rem;
+      margin: 5px 0 0;
+      color: #ddd;
+    }
+
+    #canvas {
+      border-radius: 10px;
+      background: #fff;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      width: 800px; /* Fixed width for the canvas */
+      height: 400px; /* Fixed height for the canvas */
+    }
+
+    #caption {
+      font-size: 18px;
+      margin-bottom: 20px;
+      text-align: center;
+      color: #fff;
+    }
+
+    /* Control bar centered below the canvas */
+    #control-bar {
+      background: #000;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center; /* Center items horizontally */
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+      width: 800px; /* Same width as the canvas */
+      margin-top: 20px; /* Space between canvas and control bar */
+      position: relative; /* For absolute positioning of buttons */
+    }
+
+    /* Play/Pause button */
+    #play-pause-button {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: absolute; /* Position absolutely within the control bar */
+      left: 50%; /* Center horizontally */
+      transform: translateX(-50%); /* Adjust for exact centering */
+    }
+
+    /* Step back button */
+    #step-back-button {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: absolute; /* Position absolutely within the control bar */
+      left: 39%; /* Adjust this value to move it closer to the play/pause button */
+    }
+
+    /* Step forward button */
+    #step-forward-button {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: absolute; /* Position absolutely within the control bar */
+      left: 57%; /* Adjust this value to move it closer to the play/pause button */
+    }
+
+    /* Speed slider */
+    #speed-slider {
+      width: 100px;
+      margin: 0 20px; /* Space around the speed slider */
+    }
+
+    #speed-slider input[type="range"] {
+      width: 100%;
+      cursor: pointer;
+    }
+
+    #speed-display {
+      font-size: 14px;
+      margin-left: 10px;
+    }
+
+    /* Pseudocode button */
+    #pseudocode-button {
+      background: #444;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s ease;
+      margin-left: auto; /* Push pseudocode button to the far right */
+    }
+
+    #pseudocode-button:hover {
+      background: #666;
+    }
+
+    #pseudocode-button::before {
+      content: '</>';
+      font-size: 18px;
+    }
+
+    /* Pseudocode box */
+    #pseudocode-box {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: #fff;
+      color: #333;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      width: 300px;
+      max-width: 90%;
+      display: none; /* Ensure it's hidden by default */
+    }
+
+    #pseudocode-box h3 {
+      margin-top: 0;
+    }
+
+    #pseudocode-box pre {
+      background: #f4f4f4;
+      padding: 10px;
+      border-radius: 5px;
+      overflow-x: auto;
+    }
+
+    .highlight {
+      background: yellow;
+    }
+
+    /* Custom animation input section */
+    #create-options {
+      position: fixed;
+      bottom: 120px;
+      left: 30px;
+      background-color: #fff;
+      color: #333;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      width: 250px;
+      max-width: 90%;
+      display: none; /* Ensure it's hidden by default */
+    }
+
+    #create-options h3 {
+      margin-top: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #create-options h3 span {
+      cursor: pointer;
+      font-size: 20px;
+      color: #ff4b2b;
+    }
+
+    #create-options input {
+      margin-bottom: 10px;
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+
+    #create-options button {
+      background: #6a11cb;
+      border: none;
+      padding: 10px;
+      color: white;
+      width: 100%;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #create-options button:hover {
+      background: #2575fc;
+    }
+
+    /* Toggle button for custom value section */
+    #toggle-custom-button {
+      position: fixed;
+      bottom: 20px; /* Position at the bottom */
+      left: 20px; /* Position at the left */
+      background: #ff4b2b;
+      border: none;
+      border-radius: 8px; /* Rounded edges */
+      width: auto; /* Auto width to fit the text */
+      height: 40px; /* Fixed height */
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      padding: 0 20px; /* Add padding for better appearance */
+      writing-mode: horizontal-tb; /* Horizontal text */
+      text-orientation: upright; /* Keep text upright */
+    }
+
+    #toggle-custom-button:hover {
+      transform: scale(1.05); /* Slight scale effect on hover */
+      box-shadow: 0 4px 15px rgba(255, 75, 43, 0.5);
+    }
+
+
+    /* Minimalistic play/pause icons */
+    #play-pause-button.play::before {
+      content: '▶';
+    }
+
+    #play-pause-button.pause::before {
+      content: '⏸';
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Bubble Sort Animation</h1>
+    <p>Visualize the Bubble Sort Algorithm</p>
+  </header>
+
+  <canvas id="canvas" width="800" height="400"></canvas>
+  <div id="caption">Click "Play" to start the animation.</div>
+
+  <!-- Black control bar centered below the canvas -->
+  <div id="control-bar">
+    <!-- Speed slider -->
+    <div id="speed-slider">
+      <input type="range" id="speed-range" min="0.5" max="2" step="0.25" value="1">
+      <span id="speed-display">1.0x</span>
+    </div>
+
+    <!-- Step back button -->
+    <button class="step-button" id="step-back-button"><</button>
+
+    <!-- Play/Pause button -->
+    <button id="play-pause-button" class="play"></button>
+
+    <!-- Step forward button -->
+    <button class="step-button" id="step-forward-button">></button>
+
+    <!-- Pseudocode button -->
+    <button id="pseudocode-button"></button>
+  </div>
+
+  <!-- Toggle button for custom value section -->
+  <button id="toggle-custom-button">Customize</button>
+
+  <!-- Custom animation input section -->
+  <div id="create-options">
+    <h3>Create Custom Bubble Sort <span id="close-custom-button">×</span></h3>
+    <input type="number" id="input-1" placeholder="Value 1">
+    <input type="number" id="input-2" placeholder="Value 2">
+    <input type="number" id="input-3" placeholder="Value 3">
+    <input type="number" id="input-4" placeholder="Value 4">
+    <input type="number" id="input-5" placeholder="Value 5">
+    <input type="number" id="input-6" placeholder="Value 6">
+    <input type="number" id="input-7" placeholder="Value 7">
+    <input type="number" id="input-8" placeholder="Value 8">
+    <input type="number" id="input-9" placeholder="Value 9">
+    <button id="create-sort-button">Create Sort</button>
+  </div>
+
+  <!-- Pseudocode box -->
+  <div id="pseudocode-box">
+    <h3>Pseudocode</h3>
+    <pre id="pseudocode">
+      <span id="line1">for i = 0 to n-1:</span>
+      <span id="line2">  for j = 0 to n-i-1:</span>
+      <span id="line3">    if arr[j] > arr[j+1]:</span>
+      <span id="line4">      swap(arr[j], arr[j+1])</span>
+    </pre>
+  </div>
+
+  <script>
+    // Set initial state of pseudocode box and custom options
+    document.getElementById('pseudocode-box').style.display = 'none';
+    document.getElementById('create-options').style.display = 'none';
+
+    // Get the canvas and caption elements
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const caption = document.getElementById('caption');
+
+    // Animation variables
+    let numbers = [29, 10, 14, 37, 14, 1, 2, 3, 4];
+    let i = 0, j = 0, iteration = 0, swapped = false, sorted = false;
+    let frameInterval = 1000; // Default speed (1 second per step)
+    let animationInterval;
+    let animationFrames = []; // Store animation frames
+    let currentFrame = 0; // Track current frame
+    
+
+    // Function to draw the frame
+    function drawFrame(frame) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const xStart = 50;
+      const barWidth = 60;
+      const spacing = 20;
+      const maxHeight = Math.max(...frame);
+      const canvasHeight = canvas.height;
+
+      // Determine which elements are in their correct positions
+      const sortedIndices = new Set();
+      for (let k = frame.length - i; k < frame.length; k++) {
+        sortedIndices.add(k);
+      }
+
+      // Draw the bars
+      frame.forEach((value, index) => {
+        const barHeight = (value / maxHeight) * (canvasHeight - 100);
+        const x = xStart + index * (barWidth + spacing);
+        const y = canvasHeight - barHeight - 50;
+
+        // Determine the bar color
+        let barColor;
+        if (sortedIndices.has(index)) {
+          barColor = 'rgba(0, 200, 0, 0.9)'; // Green for sorted elements
+        } else if (swapped && index === j) {
+          barColor = 'rgba(255, 87, 34, 0.9)'; // Orange for the first element being swapped
+        } else if (swapped && index === j + 1) {
+          barColor = 'rgba(255, 255, 0, 0.9)'; // Yellow for the second element being swapped
+        } else {
+          barColor = 'rgba(30, 136, 229, 0.9)'; // Default blue for other elements
+        }
+
+        // Draw the bar with the correct color
+        ctx.fillStyle = barColor;
+        ctx.fillRect(x, y, barWidth, barHeight);
+
+        // Draw the value above the bar
+        ctx.font = '18px Poppins';
+        ctx.fillStyle = '#000';
+        ctx.fillText(value, x + barWidth / 2, y - 25, barWidth);
+      });
+
+      // Draw arrows below the bars being compared
+      if (!sorted && j < numbers.length - i - 1) {
+        const arrowY = canvasHeight - 20; // Position arrows slightly below the bars
+        const arrowHeight = 20; // Height of the arrow
+        const arrowWidth = 10; // Width of the arrow
+
+        // Arrow for the first element being compared (j)
+        const arrowX1 = xStart + j * (barWidth + spacing) + barWidth / 2;
+        drawArrow(arrowX1, arrowY, arrowWidth, arrowHeight);
+
+        // Arrow for the second element being compared (j + 1)
+        const arrowX2 = xStart + (j + 1) * (barWidth + spacing) + barWidth / 2;
+        drawArrow(arrowX2, arrowY, arrowWidth, arrowHeight);
+      }
+
+      // Display iteration count
+      ctx.font = '24px Poppins';
+      ctx.fillStyle = '#444';
+      ctx.fillText(`Iteration: ${iteration}`, 20, 30);
+    }
+
+// Function to draw an arrow
+function drawArrow(x, y, width, height) {
+  ctx.beginPath();
+  ctx.moveTo(x - width / 2, y); // Start at the left side of the arrow
+  ctx.lineTo(x + width / 2, y); // Draw the horizontal line
+  ctx.lineTo(x, y - height); // Draw the diagonal line to the tip
+  ctx.lineTo(x - width / 2, y); // Draw the diagonal line back to the start
+  ctx.fillStyle = 'rgba(255, 0, 0, 0.9)'; // Red color for the arrow
+  ctx.fill();
+}
+
+    // Function to update the caption based on the current frame
+    function updateCaption() {
+      if (sorted) {
+        caption.textContent = `Bubble Sort complete! The array is now sorted: [${numbers.join(', ')}].`;
+      } else {
+        if (j < numbers.length - i - 1) {
+          if (numbers[j] > numbers[j + 1]) {
+            caption.textContent = `Swapping ${numbers[j]} and ${numbers[j + 1]} because ${numbers[j]} > ${numbers[j + 1]}.`;
+          } else {
+            caption.textContent = `Comparing ${numbers[j]} and ${numbers[j + 1]}: No swap needed as ${numbers[j]} <= ${numbers[j + 1]}.`;
+          }
+        } else {
+          caption.textContent = `Pass ${iteration} complete! The largest number in this pass (${numbers[numbers.length - i]}) is now in its correct position.`;
+        }
+      }
+    }
+
+    // Function to update the state (i, j, swapped, sorted) based on the current frame
+    function updateState() {
+      // Reset state
+      i = 0;
+      j = 0;
+      iteration = 0;
+      swapped = false;
+      sorted = false;
+
+      // Simulate the sorting process up to the current frame
+      for (let frame = 0; frame <= currentFrame; frame++) {
+        if (i < numbers.length - 1) {
+          if (j < numbers.length - i - 1) {
+            if (numbers[j] > numbers[j + 1]) {
+              swapped = true;
+              [numbers[j], numbers[j + 1]] = [numbers[j + 1], numbers[j]];
+            } else {
+              swapped = false;
+            }
+            j++;
+          } else {
+            i++;
+            j = 0;
+            iteration++;
+          }
+        } else {
+          sorted = true;
+        }
+      }
+    }
+
+    // Bubble sort animation with beginner-friendly captions
+    function animate() {
+  if (!sorted) {
+    if (i < numbers.length - 1) {
+      if (j < numbers.length - i - 1) {
+        // Update the caption before performing any action
+        if (numbers[j] > numbers[j + 1]) {
+          caption.textContent = `Swapping ${numbers[j]} and ${numbers[j + 1]} because ${numbers[j]} > ${numbers[j + 1]}.`;
+        } else {
+          caption.textContent = `Comparing ${numbers[j]} and ${numbers[j + 1]}: No swap needed as ${numbers[j]} <= ${numbers[j + 1]}.`;
+        }
+
+        // Perform the swap if needed
+        if (numbers[j] > numbers[j + 1]) {
+          swapped = true;
+          [numbers[j], numbers[j + 1]] = [numbers[j + 1], numbers[j]];
+
+          // Update the caption immediately after the swap
+          caption.textContent = `Swapped ${numbers[j + 1]} and ${numbers[j]}. Now comparing next elements.`;
+        } else {
+          swapped = false;
+        }
+        j++;
+      } else {
+        i++;
+        j = 0;
+        iteration++;
+        caption.textContent = `Pass ${iteration} complete! The largest number in this pass (${numbers[numbers.length - i]}) is now in its correct position.`;
+        updateIterationBox(); // Update the iteration box
+      }
+    } else {
+      sorted = true;
+      clearInterval(animationInterval);
+      caption.textContent = `Bubble Sort complete! The array is now sorted: [${numbers.join(', ')}].`;
+      updateIterationBox(); // Final update
+    }
+    drawFrame(numbers);
+    animationFrames.push([...numbers]); // Save frame
+    currentFrame = animationFrames.length - 1; // Update current frame
+  }
+}
+
+
+    // Play/Pause button
+    const playPauseButton = document.getElementById('play-pause-button');
+    playPauseButton.addEventListener('click', () => {
+      if (animationInterval) {
+        clearInterval(animationInterval);
+        animationInterval = null;
+        playPauseButton.classList.remove('pause');
+        playPauseButton.classList.add('play');
+      } else {
+        playPauseButton.classList.remove('play');
+        playPauseButton.classList.add('pause');
+        animationInterval = setInterval(animate, frameInterval);
+      }
+    });
+
+    // Step back button
+    const stepForwardButton = document.getElementById('step-forward-button');
+      stepForwardButton.addEventListener('click', () => {
+        if (currentFrame < animationFrames.length - 1) {
+          currentFrame++;
+          numbers = [...animationFrames[currentFrame]];
+
+          // Update the state (i, j, swapped, sorted)
+          updateState();
+
+          // Determine if a swap occurred in the current frame
+          if (currentFrame > 0) {
+            const previousFrame = animationFrames[currentFrame - 1];
+            swapped = !arraysEqual(previousFrame, numbers); // Check if the array changed
+          } else {
+            swapped = false;
+          }
+
+          // Update the caption based on the current frame
+          if (sorted) {
+            caption.textContent = `Bubble Sort complete! The array is now sorted: [${numbers.join(', ')}].`;
+          } else if (j < numbers.length - i - 1) {
+            if (numbers[j] > numbers[j + 1]) {
+              caption.textContent = `Swapped ${numbers[j + 1]} and ${numbers[j]}. Now comparing next elements.`;
+            } else {
+              caption.textContent = `Comparing ${numbers[j]} and ${numbers[j + 1]}: No swap needed as ${numbers[j]} <= ${numbers[j + 1]}.`;
+            }
+          } else {
+            caption.textContent = `Pass ${iteration} complete! The largest number in this pass (${numbers[numbers.length - i]}) is now in its correct position.`;
+          }
+
+          drawFrame(numbers);
+        }
+      });
+
+      // Step back button
+      const stepBackButton = document.getElementById('step-back-button');
+      stepBackButton.addEventListener('click', () => {
+        if (currentFrame > 0) {
+          currentFrame--;
+          numbers = [...animationFrames[currentFrame]];
+
+          // Update the state (i, j, swapped, sorted)
+          updateState();
+
+          // Determine if a swap occurred in the current frame
+          if (currentFrame > 0) {
+            const previousFrame = animationFrames[currentFrame - 1];
+            swapped = !arraysEqual(previousFrame, numbers); // Check if the array changed
+          } else {
+            swapped = false;
+          }
+
+          // Update the caption based on the current frame
+          if (sorted) {
+            caption.textContent = `Bubble Sort complete! The array is now sorted: [${numbers.join(', ')}].`;
+          } else if (j < numbers.length - i - 1) {
+            if (numbers[j] > numbers[j + 1]) {
+              caption.textContent = `Swapped ${numbers[j + 1]} and ${numbers[j]}. Now comparing next elements.`;
+            } else {
+              caption.textContent = `Comparing ${numbers[j]} and ${numbers[j + 1]}: No swap needed as ${numbers[j]} <= ${numbers[j + 1]}.`;
+            }
+          } else {
+            caption.textContent = `Pass ${iteration} complete! The largest number in this pass (${numbers[numbers.length - i]}) is now in its correct position.`;
+          }
+
+          drawFrame(numbers);
+        }
+      });
+
+      // Helper function to check if two arrays are equal
+      function arraysEqual(a, b) {
+        if (a.length !== b.length) return false;
+        for (let i = 0; i < a.length; i++) {
+          if (a[i] !== b[i]) return false;
+        }
+        return true;
+      }
+
+    // Speed slider (with throttling to avoid excessive updates)
+    const speedSlider = document.getElementById('speed-range');
+    const speedDisplay = document.getElementById('speed-display');
+    let isThrottled = false;
+
+    speedSlider.addEventListener('input', () => {
+      if (!isThrottled) {
+        isThrottled = true;
+        setTimeout(() => {
+          const speed = parseFloat(speedSlider.value);
+          frameInterval = 1000 / speed;
+          speedDisplay.textContent = `${speed}x`;
+          if (animationInterval) {
+            clearInterval(animationInterval);
+            animationInterval = setInterval(animate, frameInterval);
+          }
+          isThrottled = false;
+        }, 100); // Throttle to 100ms
+      }
+    });
+
+    // Pseudocode button
+    const pseudocodeButton = document.getElementById('pseudocode-button');
+    const pseudocodeBox = document.getElementById('pseudocode-box');
+    const pseudocodeLines = document.querySelectorAll('#pseudocode span');
+
+    pseudocodeButton.addEventListener('click', () => {
+      pseudocodeBox.style.display = pseudocodeBox.style.display === 'none' ? 'block' : 'none';
+    });
+
+    function highlightPseudocode(lineNumber) {
+      pseudocodeLines.forEach((line, index) => {
+        if (index === lineNumber) {
+          line.classList.add('highlight');
+        } else {
+          line.classList.remove('highlight');
+        }
+      });
+    }
+
+    // Highlight pseudocode based on animation step
+    function updatePseudocode() {
+      if (sorted) {
+        highlightPseudocode(-1); // No highlight when sorted
+      } else if (j < numbers.length - i - 1) {
+        if (numbers[j] > numbers[j + 1]) {
+          highlightPseudocode(3); // Highlight swap line
+        } else {
+          highlightPseudocode(2); // Highlight comparison line
+        }
+      } else {
+        highlightPseudocode(1); // Highlight outer loop line
+      }
+    }
+
+    // Update pseudocode highlighting during animation
+    setInterval(updatePseudocode, 100);
+
+    // Custom value section
+    const toggleCustomButton = document.getElementById('toggle-custom-button');
+    const createOptions = document.getElementById('create-options');
+    const closeCustomButton = document.getElementById('close-custom-button');
+
+    toggleCustomButton.addEventListener('click', () => {
+      createOptions.style.display = createOptions.style.display === 'none' ? 'block' : 'none';
+    });
+
+    closeCustomButton.addEventListener('click', () => {
+      createOptions.style.display = 'none';
+    });
+
+    const createSortButton = document.getElementById('create-sort-button');
+    createSortButton.addEventListener('click', () => {
+      const customArray = [];
+      for (let i = 1; i <= 9; i++) {
+        const input = document.getElementById(`input-${i}`);
+        if (input.value) {
+          customArray.push(Number(input.value));
+        }
+      }
+      if (customArray.length > 0) {
+        numbers = customArray;
+        i = 0;
+        j = 0;
+        iteration = 0;
+        sorted = false;
+        animationFrames = []; // Reset animation frames
+        currentFrame = 0; // Reset current frame
+        clearInterval(animationInterval);
+        playPauseButton.classList.remove('pause');
+        playPauseButton.classList.add('play');
+        caption.textContent = `Custom array created: [${numbers.join(', ')}]. Now click "Play" to start sorting.`;
+        drawFrame(numbers); // Draw initial frame
+      }
+    });
+
+
+    const iterationBox = document.createElement('div');
+iterationBox.id = 'iteration-box';
+iterationBox.style.position = 'fixed';
+iterationBox.style.top = '220px'; // Position it below the pseudocode box
+iterationBox.style.right = '20px';
+iterationBox.style.backgroundColor = '#fff';
+iterationBox.style.color = '#333';
+iterationBox.style.padding = '20px';
+iterationBox.style.borderRadius = '8px';
+iterationBox.style.boxShadow = '0 4px 10px rgba(0, 0, 0, 0.3)';
+iterationBox.style.width = '300px';
+iterationBox.style.maxWidth = '90%';
+iterationBox.style.display = 'none'; // Hidden by default
+iterationBox.innerHTML = `
+  <h3>Iteration States</h3>
+  <div id="iteration-states" style="max-height: 200px; overflow-y: auto; margin-bottom: 10px;"></div>
+`;
+document.body.appendChild(iterationBox);
+
+// Store all iteration states
+let allIterationStates = [];
+
+// Function to create a visual array of boxes for the iteration box
+function createVisualArray(array, iteration) {
+  const container = document.createElement('div');
+  container.style.display = 'flex';
+  container.style.gap = '5px'; // Slightly larger gap between bars
+  container.style.alignItems = 'flex-end';
+  container.style.marginBottom = '10px';
+
+  // Determine which elements are in their correct positions
+  const sortedIndices = new Set();
+  for (let k = array.length - iteration; k < array.length; k++) {
+    sortedIndices.add(k);
+  }
+
+  array.forEach((value, index) => {
+    const box = document.createElement('div');
+    box.style.width = '20px'; // Slightly larger width of bars
+    box.style.height = `${value * 4}px`; // Slightly larger height scaling for bars
+    box.style.borderRadius = '3px'; // Slightly larger border radius
+    box.style.display = 'flex';
+    box.style.alignItems = 'center';
+    box.style.justifyContent = 'center';
+    box.style.fontSize = '12px'; // Slightly larger font size for values
+    box.style.color = '#000';
+    box.textContent = value;
+
+    // Determine the bar color
+    if (sortedIndices.has(index)) {
+      box.style.backgroundColor = 'rgba(0, 200, 0, 0.9)'; // Green for sorted elements
+    } else {
+      box.style.backgroundColor = 'rgba(30, 136, 229, 0.9)'; // Default blue for other elements
+    }
+
+    container.appendChild(box);
+  });
+
+  return container;
+}
+
+// Function to update the iteration box with the current array state
+function updateIterationBox() {
+  const iterationStates = document.getElementById('iteration-states');
+  const iterationState = document.createElement('div');
+  iterationState.style.marginBottom = '10px';
+
+  // Add iteration label
+  const iterationLabel = document.createElement('div');
+  iterationLabel.textContent = `Iteration ${iteration}:`;
+  iterationLabel.style.fontWeight = 'bold';
+  iterationLabel.style.marginBottom = '5px';
+  iterationState.appendChild(iterationLabel);
+
+  // Add visual array
+  const visualArray = createVisualArray(numbers, iteration);
+  iterationState.appendChild(visualArray);
+
+  // Save the iteration state
+  allIterationStates.push({ iteration, array: [...numbers] });
+
+  // Clear the iteration states container and re-render all iterations
+  iterationStates.innerHTML = '';
+  allIterationStates.forEach((state) => {
+    const stateContainer = document.createElement('div');
+    stateContainer.style.marginBottom = '10px';
+
+    const label = document.createElement('div');
+    label.textContent = `Iteration ${state.iteration}:`;
+    label.style.fontWeight = 'bold';
+    label.style.marginBottom = '5px';
+    stateContainer.appendChild(label);
+
+    const visualArray = createVisualArray(state.array, state.iteration);
+    stateContainer.appendChild(visualArray);
+
+    iterationStates.appendChild(stateContainer);
+  });
+
+  iterationBox.style.display = 'block'; // Show the box
+  iterationStates.scrollTop = iterationStates.scrollHeight; // Auto-scroll to the latest state
+}
+
+// Call this function at the end of each iteration in the `animate` function
+
+// Draw the initial frame as soon as the page loads
+window.onload = () => {
+  drawFrame(numbers); // Draw the default bars
+  updateCaption(); // Update the caption
+  updateIterationBox(); // Show the initial state in the iteration box
+};
+
+
+createSortButton.addEventListener('click', () => {
+  const customArray = [];
+  for (let i = 1; i <= 9; i++) {
+    const input = document.getElementById(`input-${i}`);
+    if (input.value) {
+      customArray.push(Number(input.value));
+    }
+  }
+  if (customArray.length > 0) {
+    // Reset all animation and iteration states
+    numbers = customArray;
+    i = 0;
+    j = 0;
+    iteration = 0;
+    sorted = false;
+    animationFrames = []; // Reset animation frames
+    currentFrame = 0; // Reset current frame
+    allIterationStates = []; // Reset iteration states
+    clearInterval(animationInterval);
+    playPauseButton.classList.remove('pause');
+    playPauseButton.classList.add('play');
+
+    // Clear the iteration box
+    const iterationStates = document.getElementById('iteration-states');
+    iterationStates.innerHTML = '';
+
+    // Draw the initial frame and update the caption
+    drawFrame(numbers);
+    caption.textContent = `Custom array created: [${numbers.join(', ')}]. Now click "Play" to start sorting.`;
+
+    // Update the iteration box with the initial state
+    updateIterationBox();
+  }
+});
+
+
+  </script>
+</body>
+</html>

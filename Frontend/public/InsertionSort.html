@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Insertion Sort Animation</title>
+    <style>
+        /* --- Your Original CSS --- */
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin: 0;
+        }
+
+        header p {
+            font-size: 1.2rem;
+            margin: 5px 0 0;
+            color: #ddd;
+        }
+
+        #canvas {
+            border-radius: 10px;
+            background: #fff;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            width: 800px; /* Fixed width */
+            height: 400px; /* Fixed height */
+        }
+
+        #caption {
+            font-size: 18px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #fff;
+        }
+
+        #control-bar {
+            background: #000;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center; /* Center items */
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            width: 800px; /* Same width as canvas */
+            margin-top: 20px;
+            position: relative;
+        }
+
+        #play-pause-button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        #step-back-button, #step-forward-button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            position: absolute;
+
+        }
+
+        #step-back-button {
+          left: 39%;
+        }
+        #step-forward-button {
+          left: 57%;
+        }
+
+        #speed-slider {
+            width: 100px;
+            margin: 0 20px;
+        }
+
+        #speed-slider input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+        }
+
+        #speed-display {
+            font-size: 14px;
+            margin-left: 10px;
+        }
+
+        #pseudocode-button {
+            background: #444;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            margin-left: auto;
+            transition: background 0.2s ease;
+        }
+         #pseudocode-button:hover {
+            background: #666;
+         }
+         #pseudocode-button::before {
+            content: '</>';
+            font-size: 18px;
+         }
+
+
+        #pseudocode-box {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #fff;
+            color: #333;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            width: 300px;
+            max-width: 90%;
+            display: none; /* Hidden by default */
+        }
+
+        #pseudocode-box h3 {
+            margin-top: 0;
+        }
+
+        #pseudocode-box pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+
+        .highlight {
+            background: yellow;
+        }
+
+        #create-options {
+            position: fixed;
+            bottom: 120px;
+            left: 30px;
+            background-color: #fff;
+            color: #333;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            width: 250px;
+            max-width: 90%;
+            display: none; /* Hidden by default */
+        }
+
+        #create-options h3 {
+            margin-top: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #create-options h3 span {
+            cursor: pointer;
+            font-size: 20px;
+            color: #ff4b2b;
+        }
+
+        #create-options input {
+            margin-bottom: 10px;
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        #create-options button {
+            background: #6a11cb;
+            border: none;
+            padding: 10px;
+            color: white;
+            width: 100%;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #create-options button:hover {
+            background: #2575fc;
+        }
+
+        #toggle-custom-button {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: #ff4b2b;
+            border: none;
+            border-radius: 8px;
+            width: auto;
+            height: 40px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 0 20px;
+            writing-mode: horizontal-tb;
+            text-orientation: upright;
+        }
+         #toggle-custom-button:hover {
+             transform: scale(1.05);
+             box-shadow: 0 4px 15px rgba(255, 75, 43, 0.5);
+         }
+
+
+
+        #play-pause-button.play::before {
+            content: '▶';
+        }
+
+        #play-pause-button.pause::before {
+            content: '⏸';
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Insertion Sort Animation</h1>
+        <p>Visualize the Insertion Sort Algorithm</p>
+    </header>
+
+    <canvas id="canvas" width="800" height="400"></canvas>
+    <div id="caption">Click "Play" to start the animation.</div>
+
+    <div id="control-bar">
+        <div id="speed-slider">
+            <input type="range" id="speed-range" min="0.5" max="2" step="0.25" value="1">
+            <span id="speed-display">1.0x</span>
+        </div>
+        <button id="step-back-button"><</button>
+        <button id="play-pause-button" class="play"></button>
+        <button id="step-forward-button">></button>
+        <button id="pseudocode-button"></button>
+    </div>
+
+    <button id="toggle-custom-button">Customize</button>
+
+    <div id="create-options">
+        <h3>Create Custom Insertion Sort <span id="close-custom-button">×</span></h3>
+        <input type="number" id="input-1" placeholder="Value 1">
+        <input type="number" id="input-2" placeholder="Value 2">
+        <input type="number" id="input-3" placeholder="Value 3">
+        <input type="number" id="input-4" placeholder="Value 4">
+        <input type="number" id="input-5" placeholder="Value 5">
+        <input type="number" id="input-6" placeholder="Value 6">
+        <input type="number" id="input-7" placeholder="Value 7">
+        <input type="number" id="input-8" placeholder="Value 8">
+        <input type="number" id="input-9" placeholder="Value 9">
+        <button id="create-sort-button">Create Sort</button>
+    </div>
+
+    <div id="pseudocode-box">
+      <h3>Pseudocode</h3>
+      <pre id="pseudocode">
+        <span id="line1">for i = 1 to n-1:</span>
+        <span id="line2">  key = arr[i]</span>
+        <span id="line3">  j = i - 1</span>
+        <span id="line4">  while j >= 0 and arr[j] > key:</span>
+        <span id="line5">    arr[j + 1] = arr[j]</span>
+        <span id="line6">    j = j - 1</span>
+        <span id="line7">  arr[j + 1] = key</span>
+      </pre>
+    </div>
+
+    <div id="iteration-box" style="position: fixed; top: 220px; right: 20px; background-color: #fff; color: #333; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); width: 300px; max-width: 90%; display: none;">
+      <h3>Iteration States</h3>
+      <div id="iteration-states" style="max-height: 200px; overflow-y: auto; margin-bottom: 10px;"></div>
+    </div>
+
+    <script>
+        // --- Your Original Variables and Setup ---
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const caption = document.getElementById('caption');
+        const iterationBox = document.getElementById('iteration-box');
+
+        let numbers = [29, 10, 14, 37, 14, 1, 2, 3, 4];
+        let i = 1, j = 0, key, iteration = 0, sorted = false;
+        let frameInterval = 1000;
+        let animationInterval;
+        let animationQueue = []; // Use queue for animation steps
+        let isAnimating = false;
+        let allIterationStates = []; // To store all states for iteration box.
+
+        // --- Helper Functions ---
+        function drawFrameWithMovingBars(numbers, highlightIndices, swapX1, swapX2, swapIndex1, swapIndex2) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          const xStart = 50;
+          const barWidth = 60;
+          const spacing = 20;
+          const maxHeight = Math.max(...numbers);
+          const canvasHeight = canvas.height;
+          numbers.forEach((value, index) => {
+            const barHeight = (value/maxHeight) * (canvasHeight - 100);
+            let x = xStart + index * (barWidth+spacing);
+            const y = canvasHeight - barHeight - 50;
+
+            //if bar is being swapped, change x.
+            if(index === swapIndex1) x = swapX1;
+            else if(index === swapIndex2) x = swapX2;
+
+            let barColor = 'rgba(30, 136, 229, 0.9)';
+            if(highlightIndices.includes(index)){
+              barColor = 'rgba(255,0,0, 0.9)';
+            } else if(index < i){
+              barColor = 'rgba(0, 200, 0, 0.9)';
+            } else if(index === i) {
+              barColor = 'rgba(255, 87, 34, 0.9)';
+            }
+
+            ctx.fillStyle = barColor;
+            ctx.fillRect(x,y, barWidth, barHeight);
+
+            ctx.font = '18px Poppins';
+            ctx.fillStyle = '#000';
+            ctx.fillText(value, x + barWidth/2 , y - 25, barWidth);
+
+          });
+
+           if (!sorted && j >= 0) {
+              const arrowY = canvasHeight - 20;
+              const arrowHeight = 20;
+              const arrowWidth = 10;
+
+              const arrowXJ = xStart + j * (barWidth + spacing) + barWidth / 2;
+              drawArrow(arrowXJ, arrowY, arrowWidth, arrowHeight);
+            }
+
+          ctx.font = '24px Poppins';
+          ctx.fillStyle = '#444';
+          ctx.fillText(`Iteration: ${iteration}`, 20, 30);
+
+        }
+
+
+        function drawFrame(numbers, highlightIndices = []) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const xStart = 50;
+    const barWidth = 60;
+    const spacing = 20;
+    const maxHeight = Math.max(...numbers);
+    const canvasHeight = canvas.height;
+
+    numbers.forEach((value, index) => {
+        const barHeight = (value / maxHeight) * (canvasHeight - 100);
+        let x = xStart + index * (barWidth + spacing); // Keep original x
+        const y = canvasHeight - barHeight - 50;
+
+        let barColor = 'rgba(30, 136, 229, 0.9)'; // Default blue
+
+        // Highlight only the bars being compared
+        if (highlightIndices.includes(index)) {
+            barColor = 'rgba(255, 0, 0, 0.9)'; // Red for comparison
+        }
+
+        ctx.fillStyle = barColor;
+        ctx.fillRect(x, y, barWidth, barHeight);
+
+        ctx.font = '18px Poppins';
+        ctx.fillStyle = '#000';
+        ctx.fillText(value, x + barWidth / 2, y - 25, barWidth);
+    });
+
+    // Draw comparison arrow if needed
+    if (!sorted && j >= 0) {
+        const arrowY = canvasHeight - 20;
+        const arrowHeight = 20;
+        const arrowWidth = 10;
+        const arrowXJ = xStart + j * (barWidth + spacing) + barWidth / 2;
+        drawArrow(arrowXJ, arrowY, arrowWidth, arrowHeight);
+    }
+
+    ctx.font = '24px Poppins';
+    ctx.fillStyle = '#444';
+    ctx.fillText(`Iteration: ${iteration}`, 20, 30);
+}
+
+
+        function drawArrow(x, y, width, height){
+          ctx.beginPath();
+          ctx.moveTo(x- width/2, y);
+          ctx.lineTo(x + width/2, y);
+          ctx.lineTo(x, y - height);
+          ctx.lineTo(x - width/2, y);
+          ctx.fillStyle = 'rgba(255,0,0,0.9)';
+          ctx.fill();
+        }
+
+
+        function updateCaption(message) {
+            caption.textContent = message;
+        }
+      function createVisualArray(array, sorted, highlightIndices = []) {
+        const container = document.createElement('div');
+        container.style.display = 'flex';
+        container.style.gap = '5px';
+        container.style.alignItems = 'flex-end';
+        container.style.marginBottom = '10px';
+
+        array.forEach((value, index) => {
+            const box = document.createElement('div');
+            box.style.width = '20px';
+            box.style.height = `${value * 4}px`;
+            box.style.borderRadius = '3px';
+            box.style.display = 'flex';
+            box.style.alignItems = 'center';
+            box.style.justifyContent = 'center';
+            box.style.fontSize = '12px';
+            box.style.color = '#000';
+            box.textContent = value;
+
+            let barColor = 'rgba(30, 136, 229, 0.9)'; // Default blue
+
+            if (highlightIndices.includes(index)) {
+            barColor = 'rgba(255, 0, 0, 0.9)'; // Red for highlighted (comparison)
+            } else if (index < sorted) {
+                barColor = 'rgba(0, 200, 0, 0.9)'; // Green for sorted
+            }
+            else if (index === sorted) {
+                barColor =  'rgba(255, 87, 34, 0.9)';
+            }
+
+            box.style.backgroundColor = barColor;
+            container.appendChild(box);
+        });
+
+        return container;
+    }
+
+      function updateIterationBox() {
+          const iterationStates = document.getElementById('iteration-states');
+          if (!iterationStates) { // Check if element exists - important!
+            iterationBox.innerHTML = `
+            <h3>Iteration States</h3>
+            <div id="iteration-states" style="max-height: 200px; overflow-y: auto; margin-bottom: 10px;"></div>
+            `;
+            document.body.appendChild(iterationBox); //or wherever it should be.
+          }
+
+          const iterationState = document.createElement('div');
+          iterationState.style.marginBottom = '10px';
+
+          const iterationLabel = document.createElement('div');
+          iterationLabel.textContent = `Iteration ${iteration}:`;
+          iterationLabel.style.fontWeight = 'bold';
+          iterationLabel.style.marginBottom = '5px';
+          iterationState.appendChild(iterationLabel);
+
+            // Get highlight indices from the current animation step (if any)
+          const currentStep = animationQueue[0]; // Peek at the next step
+          const highlight = currentStep ? currentStep.highlight : [];
+
+          const visualArray = createVisualArray(numbers, i, highlight);
+          iterationState.appendChild(visualArray);
+
+
+          // Store the iteration state
+          allIterationStates.push({ iteration, array: [...numbers], highlight }); //store highlight.
+
+          // Clear and re-render all iterations
+          iterationStates.innerHTML = '';
+          allIterationStates.forEach(state => {
+              const stateContainer = document.createElement('div');
+              stateContainer.style.marginBottom = '10px';
+
+              const label = document.createElement('div');
+              label.textContent = `Iteration ${state.iteration}`;
+              label.style.fontWeight = 'bold';
+              label.style.marginBottom = '5px';
+              stateContainer.appendChild(label);
+
+              const visualArray = createVisualArray(state.array, state.iteration, state.highlight); // Use stored highlight
+              stateContainer.appendChild(visualArray);
+
+              iterationStates.appendChild(stateContainer);
+          });
+
+          iterationBox.style.display = 'block';
+          iterationStates.scrollTop = iterationStates.scrollHeight;
+      }
+
+
+      // --- Animation Logic (Queue-based, with Horizontal Swap) ---
+
+    function generateAnimationSteps() {
+        let tempNumbers = [...numbers]; // Work on a copy
+        let tempI = 1;
+        let tempJ;
+        let tempKey;
+        let tempIteration = 0;
+
+        const xStart = 50;
+        const barWidth = 60;
+        const spacing = 20;
+
+
+        while (tempI < tempNumbers.length) {
+            tempKey = tempNumbers[tempI];
+            tempJ = tempI - 1;
+
+            // Add a frame for the initial comparison (highlight i and j)
+             animationQueue.push({
+                array: [...tempNumbers],
+                highlight: [tempI, tempJ],
+                caption: `Comparing ${tempKey} with ${tempNumbers[tempJ]}`,
+                iteration: tempIteration,
+                type: 'compare' // Add a type for different animation steps
+            });
+
+            while (tempJ >= 0 && tempNumbers[tempJ] > tempKey) {
+                // Highlight the elements being compared in red
+              animationQueue.push({
+                    array: [...tempNumbers],
+                    highlight: [tempJ, tempJ+1],
+                    caption: `Comparing ${tempKey} with ${tempNumbers[tempJ]}.  ${tempNumbers[tempJ]} is greater, so shift it right.`,
+                    iteration: tempIteration,
+                    type: 'compare'
+                });
+
+                // Add a frame for the *swap* animation
+                let x1 = xStart + tempJ * (barWidth + spacing);
+                let x2 = xStart + (tempJ + 1) * (barWidth + spacing);
+                animationQueue.push({
+                    array: [...tempNumbers],
+                    highlight: [tempJ, tempJ + 1], // Highlight the swapping elements
+                    caption: `Swapping ${tempNumbers[tempJ]} and ${tempKey}`,
+                    iteration: tempIteration,
+                    type: 'swap', // Indicate a swap animation
+                    swapX1: x1,   // Initial x positions for the swap
+                    swapX2: x2,
+                    swapIndex1: tempJ,
+                    swapIndex2: tempJ + 1
+                });
+
+                // Shift element to the right (in the temporary array)
+                [tempNumbers[tempJ], tempNumbers[tempJ + 1]] = [tempNumbers[tempJ+1], tempNumbers[tempJ]]; //perform swap.
+                tempJ = tempJ - 1;
+
+            }
+
+            // Place the key in its correct position
+            tempNumbers[tempJ + 1] = tempKey;
+             animationQueue.push({
+                array: [...tempNumbers],
+                highlight: [tempJ + 1],
+                caption: `Inserting ${tempKey} at its correct position.`,
+                iteration: tempIteration,
+                type: 'insert'
+            });
+
+            tempI++;
+            tempIteration++;
+        }
+          animationQueue.push({  // Add the final sorted array state
+                array: [...tempNumbers],
+                highlight: [], // No highlight
+                caption: `Insertion Sort complete! The array is now sorted.`,
+                iteration: tempIteration,
+                type: 'complete'
+
+          });
+    }
+
+
+
+    function processAnimationQueue() {
+    if (!isAnimating || animationQueue.length === 0) {
+        isAnimating = false;  // Stop animation if paused
+        playPauseButton.classList.remove('pause');
+        playPauseButton.classList.add('play');
+        return;
+    }
+
+    const nextStep = animationQueue.shift();
+    numbers = [...nextStep.array];
+    iteration = nextStep.iteration;
+    updateCaption(nextStep.caption);
+    updateIterationBox();
+
+    if (nextStep.type === 'compare' || nextStep.type === 'insert') {
+        drawFrame(numbers, nextStep.highlight);
+        setTimeout(() => processAnimationQueue(), frameInterval);
+    } else if (nextStep.type === 'swap') {
+        animateSwap(nextStep, () => processAnimationQueue());
+    } else if (nextStep.type === 'complete') {
+        drawFrame(numbers);
+        sorted = true;
+        isAnimating = false;  
+        playPauseButton.classList.remove('pause');
+        playPauseButton.classList.add('play');
+        updateCaption(nextStep.caption);
+    }
+}
+
+
+    function animateSwap(step, callback) {
+        const steps = 50; // Number of animation steps
+        let currentStep = 0;
+        const dx = (step.swapX2 - step.swapX1) / steps; // Calculate the distance to move per step.
+
+        function move() {
+          if(currentStep < steps) {
+            //move bars
+            step.swapX1 += dx;
+            step.swapX2 -= dx;
+            currentStep++;
+            drawFrameWithMovingBars(numbers, step.highlight, step.swapX1, step.swapX2, step.swapIndex1, step.swapIndex2);
+            requestAnimationFrame(move); // Use requestAnimationFrame
+          } else {
+            // Swap values in the actual numbers array *after* animation
+            [numbers[step.swapIndex1], numbers[step.swapIndex2]] = [numbers[step.swapIndex2], numbers[step.swapIndex1]];
+            drawFrame(numbers, step.highlight); //redrew frame after swap.
+            callback();
+          }
+        }
+        move();
+    }
+
+
+
+    // --- Event Handlers ---
+
+    const playPauseButton = document.getElementById('play-pause-button');
+    playPauseButton.addEventListener('click', () => {
+    if (!isAnimating) {  
+        playPauseButton.classList.remove('play');
+        playPauseButton.classList.add('pause');
+
+        if (animationQueue.length === 0 || sorted) { 
+            sorted = false;
+            i = 1;
+            animationQueue = [];
+            generateAnimationSteps();
+            allIterationStates = [];
+            document.getElementById('iteration-states').innerHTML = "";
+        }
+
+        isAnimating = true;
+        processAnimationQueue();  // Start animation
+    } else {  
+        playPauseButton.classList.remove('pause');
+        playPauseButton.classList.add('play');
+        isAnimating = false;  // Stop animations
+    }
+});
+
+
+
+    const stepForwardButton = document.getElementById('step-forward-button');
+    stepForwardButton.addEventListener('click', () => {
+    if (animationQueue.length > 0) {
+        const wasAnimating = isAnimating;
+        isAnimating = true;
+        processAnimationQueue();
+        isAnimating = wasAnimating;  // Restore previous state
+    }
+});
+
+
+const stepBackButton = document.getElementById('step-back-button');
+    stepBackButton.addEventListener('click', () => {
+        if (!isAnimating && allIterationStates.length > 1) { // > 1, not 0
+            allIterationStates.pop(); // Remove the *current* state, which is the last one
+            const previousStep = allIterationStates[allIterationStates.length - 1]; // Get the *new* last state
+
+            if (previousStep) {
+                numbers = [...previousStep.array]; // Restore numbers
+                iteration = previousStep.iteration; // Restore iteration
+                i = iteration + 1; // Correctly restore 'i'
+
+                // Clear the queue, we're going back to a specific state.  We *don't* want to replay any steps after this.
+                animationQueue.length = 0;
+
+                drawFrame(numbers, previousStep.highlight); // Redraw, using stored highlight
+                updateIterationBox(); // Rebuild the iteration box based on allIterationStates
+                updateCaption(`Reverted to Iteration ${iteration}`); // Correct caption
+            }
+        }
+    });
+
+
+
+    const speedSlider = document.getElementById('speed-range');
+    const speedDisplay = document.getElementById('speed-display');
+    let isThrottled = false; //for slider changes.
+    speedSlider.addEventListener('input', () => {
+        if (!isThrottled) {
+            isThrottled = true;
+            setTimeout(() => {
+                const speed = parseFloat(speedSlider.value);
+                frameInterval = 1000 / speed;
+                speedDisplay.textContent = `${speed}x`;
+
+                if (animationInterval) {
+                  clearInterval(animationInterval);
+                  animationInterval = setInterval(processAnimationQueue, frameInterval); //use process
+                }
+
+                isThrottled = false;
+            }, 100); // Throttle to 100ms
+        }
+    });
+
+
+    const pseudocodeButton = document.getElementById('pseudocode-button');
+    const pseudocodeBox = document.getElementById('pseudocode-box');
+
+    pseudocodeButton.addEventListener('click', () => {
+      pseudocodeBox.style.display = pseudocodeBox.style.display === 'none' ? 'block' : 'none';
+    });
+
+    // Custom values
+    const toggleCustomButton = document.getElementById('toggle-custom-button');
+    const createOptions = document.getElementById('create-options');
+    const closeCustomButton = document.getElementById('close-custom-button');
+
+    toggleCustomButton.addEventListener('click', () => {
+        createOptions.style.display = createOptions.style.display === 'none' ? 'block' : 'none';
+    });
+
+    closeCustomButton.addEventListener('click', () => {
+        createOptions.style.display = 'none';
+    });
+
+      const createSortButton = document.getElementById('create-sort-button');
+      createSortButton.addEventListener('click', () => {
+        const customArray = [];
+        for (let i = 1; i <= 9; i++) {
+          const input = document.getElementById(`input-${i}`);
+          if (input.value) {
+            customArray.push(Number(input.value));
+          }
+        }
+        if (customArray.length > 0) {
+          numbers = customArray;
+          i = 1;
+          j = 0;
+          iteration = 0;
+          sorted = false;
+          animationQueue = []; // Clear the animation queue
+          allIterationStates = [];
+          document.getElementById('iteration-states').innerHTML = ''; //clear iteration box
+          clearInterval(animationInterval);
+          animationInterval = null;  //important: clear before changing state.
+          playPauseButton.classList.remove('pause');
+          playPauseButton.classList.add('play');
+          caption.textContent = `Custom array created: [${numbers.join(', ')}]. Now click "Play" to start sorting.`;
+          drawFrame(numbers);
+          updateIterationBox();
+        }
+    });
+
+      // --- Initialization ---
+      drawFrame(numbers); // Initial draw
+      updateIterationBox(); // Initial iteration box state
+      document.getElementById('pseudocode-box').style.display = 'none'; // hide by default
+      document.getElementById('create-options').style.display = 'none'; //hide by default.
+    </script>
+</body>
+</html>

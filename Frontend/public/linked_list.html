@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Linked List Visualizer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code&family=Inter:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f9f9fb;
+      color: #222;
+      padding-bottom: 120px;
+    }
+
+    .list-wrapper {
+      display: flex;
+      justify-content: center;
+      margin-top: 140px;
+    }
+
+    .list-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 30px;
+      align-items: center;
+      max-width: 90vw;
+      justify-content: center;
+    }
+
+    .node {
+      background: #ffffff;
+      border: 2px solid #272e6a;
+      border-radius: 12px;
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.06);
+      min-width: 150px;
+      max-width: 150px;
+      display: flex;
+      flex-direction: column;
+      font-family: 'Fira Code', monospace;
+    }
+
+    .node-part {
+      padding: 12px;
+      text-align: center;
+      font-weight: 500;
+      font-size: 0.95rem;
+      border-bottom: 1px solid #272e6a;
+    }
+
+    .node-part:last-child {
+      border-bottom: none;
+    }
+
+    .arrow {
+      width: 50px;
+      height: 2px;
+      background: #272e6a;
+      position: relative;
+    }
+
+    .arrow::after {
+      content: "";
+      position: absolute;
+      right: 0;
+      top: -6px;
+      border-top: 6px solid transparent;
+      border-bottom: 6px solid transparent;
+      border-left: 10px solid #272e6a;
+    }
+
+    .panel {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background: #d94f70;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+      z-index: 10;
+      width: 240px;
+    }
+
+    .panel .action-group {
+      margin-bottom: 10px;
+    }
+
+    .panel button.toggle-btn {
+      width: 100%;
+      padding: 8px;
+      border: none;
+      background: #e76c8c;
+      color: white;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .panel button.toggle-btn:hover {
+      background: #e04961;
+    }
+
+    .panel .input-wrapper {
+      background: white;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 6px;
+      display: none;
+    }
+
+    .panel .input-wrapper input {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 6px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .panel .input-wrapper input.small {
+      width: 48%;
+      display: inline-block;
+    }
+
+    .panel .input-wrapper button {
+      background: #e76c8c;
+      color: white;
+      padding: 8px;
+      width: 100%;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .highlight {
+      background-color: #ffe066;
+    }
+
+    .found {
+      background-color: #51cf66 !important;
+    }
+
+    .message {
+      text-align: center;
+      margin-top: 20px;
+      font-weight: 600;
+      color: #e03131;
+      font-size: 1.1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="list-wrapper">
+    <div class="list-container" id="listContainer"></div>
+  </div>
+  <div id="message" class="message"></div>
+
+  <div class="panel">
+    <div class="action-group">
+      <button class="toggle-btn" onclick="toggleInput('create')">Create(M,N)</button>
+      <div class="input-wrapper" id="create">
+        <input type="text" id="createInput" placeholder="e.g. 1,2,3">
+        <button onclick="handleAction('create')">Go</button>
+      </div>
+    </div>
+    <div class="action-group">
+      <button class="toggle-btn" onclick="toggleInput('insert')">Insert(v)</button>
+      <div class="input-wrapper" id="insert">
+        <input class="small" type="text" id="insertValue" placeholder="val">
+        <input class="small" type="number" id="insertPos" placeholder="pos">
+        <button onclick="handleAction('insert')">Go</button>
+      </div>
+    </div>
+    <div class="action-group">
+      <button class="toggle-btn" onclick="toggleInput('remove')">Remove(i)</button>
+      <div class="input-wrapper" id="remove">
+        <input type="text" id="removeInput" placeholder="value">
+        <button onclick="handleAction('remove')">Go</button>
+      </div>
+    </div>
+    <div class="action-group">
+      <button class="toggle-btn" onclick="toggleInput('search')">Select</button>
+      <div class="input-wrapper" id="search">
+        <input type="text" id="searchInput" placeholder="search...">
+        <button onclick="handleAction('search')">Go</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let linkedList = ["A", "B", "C", "D"];
+    
+    function renderList(highlightIndex = -1, foundIndex = -1) {
+      const container = document.getElementById("listContainer");
+      container.innerHTML = "";
+      for (let i = 0; i < linkedList.length; i++) {
+        const node = document.createElement("div");
+        node.className = "node";
+        if (i === highlightIndex) node.classList.add("highlight");
+        if (i === foundIndex) node.classList.add("found");
+
+        const prev = document.createElement("div");
+        prev.className = "node-part";
+        prev.textContent = i > 0 ? `0x${(1000 + (i - 1) * 4).toString(16)}` : "null";
+
+        const data = document.createElement("div");
+        data.className = "node-part";
+        data.textContent = linkedList[i];
+
+        const next = document.createElement("div");
+        next.className = "node-part";
+        next.textContent = i < linkedList.length - 1 ? `0x${(1000 + (i + 1) * 4).toString(16)}` : "null";
+
+        node.appendChild(prev);
+        node.appendChild(data);
+        node.appendChild(next);
+        container.appendChild(node);
+
+        if (i < linkedList.length - 1) {
+          const arrow = document.createElement("div");
+          arrow.className = "arrow";
+          container.appendChild(arrow);
+        }
+      }
+    }
+
+    function toggleInput(id) {
+      const panel = document.getElementById(id);
+      const allInputs = document.querySelectorAll(".input-wrapper");
+      
+      allInputs.forEach(input => {
+        if (input !== panel) {
+          input.style.display = "none";
+        }
+      });
+
+      panel.style.display = panel.style.display === "block" ? "none" : "block";
+    }
+
+    async function animateSearch(value) {
+      document.getElementById("message").textContent = "";
+      for (let i = 0; i < linkedList.length; i++) {
+        renderList(i);
+        await new Promise(r => setTimeout(r, 500));
+        if (linkedList[i] === value) {
+          renderList(-1, i);
+          return;
+        }
+      }
+      renderList();
+      document.getElementById("message").textContent = `Value '${value}' not found.`;
+    }
+
+    function handleAction(type) {
+      const msg = document.getElementById("message");
+      msg.textContent = "";
+
+      if (type === "create") {
+        const input = document.getElementById("createInput").value.trim();
+        const values = input.split(",").map(v => v.trim()).filter(v => v);
+        if (values.length > 12) {
+          msg.textContent = "Max 12 values allowed.";
+          return;
+        }
+        linkedList = values;
+        renderList();
+      }
+
+      if (type === "insert") {
+        const value = document.getElementById("insertValue").value.trim();
+        const pos = parseInt(document.getElementById("insertPos").value);
+        if (!value || isNaN(pos) || pos < 0 || pos > linkedList.length || linkedList.length >= 12) return;
+        linkedList.splice(pos, 0, value);
+        renderList();
+      }
+
+      if (type === "remove") {
+        const value = document.getElementById("removeInput").value.trim();
+        const index = linkedList.indexOf(value);
+        if (index === -1) {
+          msg.textContent = `Value '${value}' not found.`;
+          return;
+        }
+        linkedList.splice(index, 1);
+        renderList();
+      }
+
+      if (type === "search") {
+        const value = document.getElementById("searchInput").value.trim();
+        animateSearch(value);
+      }
+    }
+
+    renderList();
+  </script>
+</body>
+</html>

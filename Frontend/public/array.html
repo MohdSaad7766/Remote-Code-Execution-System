@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Array Animation</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #f1f1f1;
+    }
+    .container {
+      padding: 20px;
+    }
+    .array {
+      display: flex;
+      margin: 200px auto 30px auto;
+      width: max-content;
+    }
+    .cell {
+      width: 40px;
+      height: 40px;
+      border: 2px solid #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-right: 4px;
+      font-weight: bold;
+      background: white;
+      position: relative;
+      transition: transform 0.5s ease, background 0.5s ease;
+    }
+    .index {
+      position: absolute;
+      bottom: -20px;
+      font-size: 14px;
+      color: red;
+    }
+    .panel {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      background: #d04b6e;
+      padding: 10px;
+      width: 260px;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .panel-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .panel button {
+      width: 100%;
+      padding: 5px;
+      border: none;
+      background: #e06a85;
+      color: white;
+      cursor: pointer;
+    }
+    .input-group {
+      flex-direction: column;
+      gap: 4px;
+      display: none;
+      background-color: #fff;
+      padding: 6px;
+      border-radius: 4px;
+      color: black;
+    }
+    .input-row {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .input-group input {
+      flex: 1;
+      padding: 4px;
+    }
+    .highlight {
+      background-color: yellow;
+    }
+    .warning {
+      color: red;
+      font-size: 12px;
+    }
+    @keyframes slideRight {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(44px); }
+    }
+    .slide-right {
+      animation: slideRight 0.8s ease forwards;
+    }
+    @keyframes slideLeft {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-44px); }
+    }
+    .slide-left {
+      animation: slideLeft 0.8s ease forwards;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="array" id="arrayContainer"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-group">
+      <button onclick="toggleInputs('createInputs')">Create(M, N)</button>
+      <div id="createInputs" class="input-group">
+        <div class="input-row">
+          <input id="customInput" placeholder="e.g. 1,2,3">
+          <button onclick="createCustomArray()">Go</button>
+        </div>
+        <span id="createWarning" class="warning"></span>
+      </div>
+    </div>
+
+    <div class="panel-group">
+      <button onclick="toggleInputs('insertInputs')">Insert(v)</button>
+      <div id="insertInputs" class="input-group">
+        <div class="input-row">
+          <input id="insertValue" placeholder="Value">
+          <input id="insertIndex" placeholder="Index (optional)">
+        </div>
+        <div class="input-row">
+          <button onclick="insertValue()">Insert</button>
+          <span id="insertWarning" class="warning"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-group">
+      <button onclick="toggleInputs('removeInputs')">Remove(i)</button>
+      <div id="removeInputs" class="input-group">
+        <div class="input-row">
+          <input id="removeIndex" placeholder="Index">
+          <button onclick="removeIndex()">Go</button>
+          <span id="removeWarning" class="warning"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-group">
+      <button onclick="toggleInputs('selectInputs')">Select</button>
+      <div id="selectInputs" class="input-group">
+        <div class="input-row">
+          <button onclick="highlightMin()">Min</button>
+          <button onclick="highlightMax()">Max</button>
+        </div>
+        <div class="input-row">
+          <input id="searchValue" placeholder="Search value">
+          <button onclick="highlightValue()">Go</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-group">
+      <button onclick="toggleInputs('updateInputs')">Update</button>
+      <div id="updateInputs" class="input-group">
+        <div class="input-row">
+          <input id="updateIndex" placeholder="Index">
+          <input id="updateValue" placeholder="New Value">
+        </div>
+        <div class="input-row">
+          <button onclick="updateValue()">Go</button>
+          <span id="updateWarning" class="warning"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let array = [-92, 27, -54, -20, 34, null, null, null, null, null];
+    const arrayContainer = document.getElementById('arrayContainer');
+
+    function renderArray(highlightedIndices = []) {
+      arrayContainer.innerHTML = '';
+      array.forEach((value, index) => {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        if (highlightedIndices.includes(index)) {
+          cell.classList.add('highlight');
+        }
+        cell.innerHTML = value !== null ? value : '';
+
+        const indexEl = document.createElement('div');
+        indexEl.className = 'index';
+        indexEl.innerText = index;
+
+        cell.appendChild(indexEl);
+        arrayContainer.appendChild(cell);
+      });
+    }
+
+    function toggleInputs(id) {
+      document.querySelectorAll('.input-group').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.warning').forEach(w => w.innerText = '');
+      const elem = document.getElementById(id);
+      if (elem) elem.style.display = 'flex';
+    }
+
+    function createCustomArray() {
+      const input = document.getElementById('customInput').value;
+      const warning = document.getElementById('createWarning');
+      warning.innerText = '';
+      const values = input.split(',').map(v => parseInt(v.trim())).filter(v => !isNaN(v));
+
+      if (values.length > 16) {
+        warning.innerText = 'Max size is 16';
+        return;
+      }
+
+      array = new Array(16).fill(null);
+      values.forEach((val, i) => array[i] = val);
+      renderArray();
+    }
+
+    function insertValue() {
+      const warning = document.getElementById('insertWarning');
+      warning.innerText = '';
+      const val = parseInt(document.getElementById('insertValue').value);
+      const idxInput = document.getElementById('insertIndex').value;
+      const idx = parseInt(idxInput);
+
+      if (isNaN(val)) return;
+
+      if (!isNaN(idx)) {
+        if (idx < 0 || idx >= array.length) {
+          warning.innerText = 'Index out of bounds';
+          return;
+        }
+        if (array[idx] === null) {
+          array[idx] = val;
+          renderArray([idx]);
+        } else {
+          for (let i = array.length - 1; i > idx; i--) {
+            array[i] = array[i - 1];
+          }
+          array[idx] = val;
+          animateInsertShift(idx);
+        }
+      } else {
+        const insertPos = array.findIndex(v => v === null);
+        if (insertPos !== -1) {
+          array[insertPos] = val;
+          renderArray([insertPos]);
+        }
+      }
+    }
+
+    function animateInsertShift(startIndex) {
+      const cells = document.querySelectorAll('.cell');
+      for (let i = array.length - 1; i > startIndex; i--) {
+        if (cells[i]) {
+          cells[i].classList.add('slide-right');
+        }
+      }
+      setTimeout(() => renderArray([startIndex]), 900);
+    }
+
+    function removeIndex() {
+      const warning = document.getElementById('removeWarning');
+      warning.innerText = '';
+      const i = parseInt(document.getElementById('removeIndex').value);
+      if (isNaN(i) || i < 0 || i >= array.length) {
+        warning.innerText = 'Index out of bounds';
+        return;
+      }
+      if (array[i] !== null) {
+        animateRemoveShift(i);
+        setTimeout(() => {
+          for (let j = i; j < array.length - 1; j++) {
+            array[j] = array[j + 1];
+          }
+          array[array.length - 1] = null;
+          renderArray();
+        }, 900);
+      }
+    }
+
+    function animateRemoveShift(startIndex) {
+      const cells = document.querySelectorAll('.cell');
+      for (let i = startIndex + 1; i < array.length; i++) {
+        if (cells[i]) {
+          cells[i].classList.add('slide-left');
+        }
+      }
+    }
+
+    function highlightMin() {
+      let minVal = Infinity;
+      let minIndex = -1;
+      array.forEach((val, i) => {
+        if (val !== null && val < minVal) {
+          minVal = val;
+          minIndex = i;
+        }
+      });
+      if (minIndex !== -1) animateCell(minIndex);
+    }
+
+    function highlightMax() {
+      let maxVal = -Infinity;
+      let maxIndex = -1;
+      array.forEach((val, i) => {
+        if (val !== null && val > maxVal) {
+          maxVal = val;
+          maxIndex = i;
+        }
+      });
+      if (maxIndex !== -1) animateCell(maxIndex);
+    }
+
+    function highlightValue() {
+      const val = parseInt(document.getElementById('searchValue').value);
+      if (!isNaN(val)) {
+        const index = array.findIndex(v => v === val);
+        if (index !== -1) animateCell(index);
+      }
+    }
+
+    function updateValue() {
+      const warning = document.getElementById('updateWarning');
+      warning.innerText = '';
+      const i = parseInt(document.getElementById('updateIndex').value);
+      const newValue = parseInt(document.getElementById('updateValue').value);
+      if (isNaN(i) || i < 0 || i >= array.length) {
+        warning.innerText = 'Index out of bounds';
+        return;
+      }
+      if (!isNaN(newValue)) {
+        array[i] = newValue;
+        animateCell(i);
+        renderArray();
+      }
+    }
+
+    function animateCell(index) {
+      requestAnimationFrame(() => {
+        const cells = document.querySelectorAll('.cell');
+        cells[index].classList.add('highlight');
+        setTimeout(() => cells[index].classList.remove('highlight'), 1000);
+      });
+    }
+
+    renderArray();
+  </script>
+</body>
+</html>

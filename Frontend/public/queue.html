@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Queue Animation</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #fdf6f9;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 60px;
+      height: 100vh;
+    }
+
+    .queue-container {
+      border: 2px solid #ff69b4;
+      border-radius: 10px;
+      padding: 20px;
+      background: white;
+      display: flex;
+      align-items: center;
+    }
+
+    .queue {
+      display: flex;
+      gap: 10px;
+    }
+
+    .block {
+      width: 60px;
+      height: 60px;
+      background: #ffb6c1;
+      border: 2px solid #ff69b4;
+      border-radius: 6px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+    }
+
+    .dequeue-animation {
+      animation: dequeueFadeOut 0.4s forwards;
+    }
+
+    @keyframes dequeueFadeOut {
+      0% {
+        opacity: 1;
+        transform: translateX(0);
+      }
+      100% {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+    }
+
+    .panel {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      background: #d04b6e;
+      padding: 10px;
+      width: 240px;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      border-radius: 8px;
+    }
+
+    .panel button {
+      width: 100%;
+      padding: 6px;
+      border: none;
+      background: #e06a85;
+      color: white;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    .panel button:hover {
+      background: #ff1493;
+    }
+
+    .input-group {
+      display: none;
+      flex-direction: row;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .input-group input {
+      flex: 1;
+      padding: 4px;
+      border-radius: 4px;
+      border: none;
+      background: white;
+      color: black;
+    }
+
+    .input-group button {
+      padding: 4px 8px;
+      background: #e06a85;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    #message {
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Queue Animation</h1>
+    <div class="queue-container">
+        <div style="display: flex; flex-direction: column; align-items: center; margin-right: 10px;">
+          <div style="font-weight: bold; color: #d04b6e;">Head</div>
+        </div>
+        <div class="queue" id="queue"></div>
+        <div style="display: flex; flex-direction: column; align-items: center; margin-left: 10px;">
+          <div style="font-weight: bold; color: #d04b6e;">Rear</div>
+        </div>
+      </div>
+      
+    <p id="message"></p>
+  </div>
+
+  <div class="panel">
+    <button onclick="toggleInput('createInput')">Create</button>
+    <div class="input-group" id="createInput">
+      <input type="text" id="queueValues" placeholder="A,B,C" />
+      <button onclick="createQueue()">OK</button>
+    </div>
+
+    <button onclick="toggleInput('enqueueInput')">Enqueue</button>
+    <div class="input-group" id="enqueueInput">
+      <input type="text" id="enqueueValue" placeholder="Value" />
+      <button onclick="enqueue()">OK</button>
+    </div>
+
+    <button onclick="dequeue()">Dequeue</button>
+    <button onclick="checkIsEmpty()">Is Empty?</button>
+    <button onclick="checkIsFull()">Is Full?</button>
+  </div>
+
+  <script>
+    let queue = ["A", "B", "C"];
+    let maxSize = 6;
+
+    function renderQueue() {
+      const queueDiv = document.getElementById("queue");
+      queueDiv.innerHTML = "";
+      queue.forEach(value => {
+        const block = document.createElement("div");
+        block.className = "block";
+        block.textContent = value;
+        queueDiv.appendChild(block);
+      });
+    }
+
+    function enqueue() {
+      const val = document.getElementById("enqueueValue").value;
+      if (queue.length >= maxSize) {
+        showMessage("Queue is full!");
+        return;
+      }
+      if (!val) {
+        showMessage("Please enter a value.");
+        return;
+      }
+      queue.push(val);
+      document.getElementById("enqueueValue").value = "";
+      renderQueue();
+      showMessage(`Enqueued '${val}' to queue.`);
+    }
+
+    function dequeue() {
+      if (queue.length === 0) {
+        showMessage("Queue is empty!");
+        return;
+      }
+
+      const queueDiv = document.getElementById("queue");
+      const firstBlock = queueDiv.firstElementChild;
+      if (firstBlock) {
+        firstBlock.classList.add("dequeue-animation");
+        setTimeout(() => {
+          queue.shift();
+          renderQueue();
+        }, 400);
+        showMessage(`Dequeued '${queue[0]}' from queue.`);
+      }
+    }
+
+    function createQueue() {
+      const input = document.getElementById("queueValues").value;
+      const values = input.split(",").map(val => val.trim()).filter(val => val);
+
+      if (values.length === 0) {
+        showMessage("Enter comma-separated values to create the queue.");
+        return;
+      }
+
+      if (values.length > 6) {
+        showMessage("Maximum 6 values allowed.");
+        return;
+      }
+
+      queue = values;
+      maxSize = 6;
+      document.getElementById("queueValues").value = "";
+      renderQueue();
+      showMessage(`Created queue: ${values.join(", ")}`);
+    }
+
+    function checkIsEmpty() {
+      showMessage(queue.length === 0 ? "Queue is empty." : "Queue is not empty.");
+    }
+
+    function checkIsFull() {
+      showMessage(queue.length === maxSize ? "Queue is full." : "Queue is not full.");
+    }
+
+    function showMessage(msg) {
+      document.getElementById("message").textContent = msg;
+    }
+
+    function toggleInput(id) {
+      document.querySelectorAll('.input-group').forEach(group => {
+        group.style.display = (group.id === id && group.style.display !== 'flex') ? 'flex' : 'none';
+      });
+    }
+
+    window.onload = () => {
+      renderQueue();
+    };
+  </script>
+</body>
+</html>

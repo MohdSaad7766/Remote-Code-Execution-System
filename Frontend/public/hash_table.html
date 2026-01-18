@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hash Table Animation</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #fff;
+      overflow-x: hidden;
+    }
+    #controls {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      background: #ff69b4;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      z-index: 10;
+    }
+    .input-section {
+      display: none;
+      margin-top: 5px;
+    }
+    .input-section input {
+      margin-right: 5px;
+    }
+    .btn {
+      cursor: pointer;
+      padding: 5px 10px;
+      background: #e91e63;
+      color: white;
+      border: none;
+    }
+    #table {
+      display: flex;
+      flex-wrap: wrap;
+      padding: 20px;
+      justify-content: center;
+      gap: 30px;
+    }
+    .bucket {
+      min-width: 60px;
+      text-align: center;
+    }
+    .bucket .head {
+      width: 40px;
+      height: 40px;
+      border: 2px solid #e91e63;
+      border-radius: 50%;
+      line-height: 40px;
+      margin: auto;
+      margin-bottom: 5px;
+      background: white;
+    }
+    .bucket .index {
+      color: #e91e63;
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+    .chain {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 5px;
+    }
+    .node {
+      width: 40px;
+      height: 40px;
+      border: 2px solid #e91e63;
+      border-radius: 50%;
+      line-height: 40px;
+      background: white;
+      margin: auto;
+    }
+    .highlight {
+      background-color: #ffb6c1;
+    }
+    #formula {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 18px;
+      color: #e91e63;
+    }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <button class="btn" onclick="showInput('create')">Create(M,N)</button>
+    <div class="input-section" id="create-section">
+      <input type="text" id="create-input" placeholder="e.g. 35,67,74" />
+      <button class="btn" onclick="createTable()">Go</button>
+    </div>
+
+    <button class="btn" onclick="showInput('insert')">Insert(v)</button>
+    <div class="input-section" id="insert-section">
+      <input type="number" id="insert-input" />
+      <button class="btn" onclick="insertValue()">Go</button>
+    </div>
+
+    <button class="btn" onclick="showInput('search')">Search(v)</button>
+    <div class="input-section" id="search-section">
+      <input type="number" id="search-input" />
+      <button class="btn" onclick="searchValue()">Go</button>
+    </div>
+
+    <button class="btn" onclick="showInput('remove')">Remove(v)</button>
+    <div class="input-section" id="remove-section">
+      <input type="number" id="remove-input" />
+      <button class="btn" onclick="removeValue()">Go</button>
+    </div>
+  </div>
+
+  <div id="table"></div>
+  <div id="formula">Hash Function: index = value % M (M = 10)</div>
+
+  <script>
+    let hashTable = [];
+    let size = 10; // Updated size from 11 to 10
+
+    function showInput(type) {
+      ['create', 'insert', 'search', 'remove'].forEach(t => {
+        document.getElementById(`${t}-section`).style.display = (t === type) ? 'block' : 'none';
+      });
+    }
+
+    function createTable() {
+      const input = document.getElementById('create-input').value;
+      const values = input.split(',').map(Number).filter(n => !isNaN(n));
+      hashTable = Array(size).fill(null).map(() => []);
+      values.forEach(v => {
+        const idx = v % size; // Updated hash function
+        hashTable[idx].push(v);
+      });
+      renderTable();
+    }
+
+    function insertValue() {
+      const v = parseInt(document.getElementById('insert-input').value);
+      if (isNaN(v)) return;
+      const idx = v % size; // Updated hash function
+      hashTable[idx].push(v);
+      renderTable();
+    }
+
+    function searchValue() {
+      const v = parseInt(document.getElementById('search-input').value);
+      if (isNaN(v)) return;
+      renderTable(v, 'search');
+    }
+
+    function removeValue() {
+      const v = parseInt(document.getElementById('remove-input').value);
+      if (isNaN(v)) return;
+      const idx = v % size; // Updated hash function
+      hashTable[idx] = hashTable[idx].filter(n => n !== v);
+      renderTable();
+    }
+
+    function renderTable(highlightValue = null, action = '') {
+      const container = document.getElementById('table');
+      container.innerHTML = '';
+      hashTable.forEach((bucket, i) => {
+        const div = document.createElement('div');
+        div.className = 'bucket';
+
+        const index = document.createElement('div');
+        index.className = 'index';
+        index.textContent = i;
+        div.appendChild(index);
+
+        const head = document.createElement('div');
+        head.className = 'head';
+        head.textContent = 'H';
+        div.appendChild(head);
+
+        const chain = document.createElement('div');
+        chain.className = 'chain';
+
+        bucket.forEach(val => {
+          const node = document.createElement('div');
+          node.className = 'node';
+          node.textContent = val;
+          if (action === 'search' && val === highlightValue) {
+            node.classList.add('highlight');
+          }
+          chain.appendChild(node);
+        });
+
+        div.appendChild(chain);
+        container.appendChild(div);
+      });
+    }
+
+    // Set a default hash table on load
+    window.onload = function () {
+      hashTable = Array(size).fill(null).map(() => []);
+      [35, 67, 91, 49, 74, 40, 56, 67].forEach(v => {
+        const idx = v % size; // Updated hash function
+        hashTable[idx].push(v);
+      });
+      renderTable();
+    }
+  </script>
+</body>
+</html>

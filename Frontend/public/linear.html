@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Array Animation</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #f1f1f1;
+    }
+    .container {
+      padding: 20px;
+      text-align: center;
+    }
+    .array {
+      display: flex;
+      margin: 200px auto 10px auto;
+      width: max-content;
+    }
+    .cell {
+      width: 40px;
+      height: 40px;
+      border: 2px solid #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-right: 4px;
+      font-weight: bold;
+      background: white;
+      position: relative;
+      transition: transform 0.5s ease, background 0.5s ease;
+    }
+    .index {
+      position: absolute;
+      bottom: -20px;
+      font-size: 14px;
+      color: red;
+    }
+    .panel {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      background: #d04b6e;
+      padding: 10px;
+      width: 260px;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .panel-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .panel button {
+      width: 100%;
+      padding: 5px;
+      border: none;
+      background: #e06a85;
+      color: white;
+      cursor: pointer;
+    }
+    .input-group {
+      flex-direction: column;
+      gap: 4px;
+      display: none;
+      background-color: #fff;
+      padding: 6px;
+      border-radius: 4px;
+      color: black;
+    }
+    .input-row {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .input-group input {
+      flex: 1;
+      padding: 4px;
+    }
+    .highlight {
+      background-color: yellow;
+    }
+    #searchMessage {
+      margin-top: 40px;
+      font-size: 17px;
+      color: #b30000;
+      font-weight: bold;
+      min-height: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="array" id="arrayContainer"></div>
+    <div id="searchMessage"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-group">
+      <button onclick="toggleInputs('createInputs')">Create(M, N)</button>
+      <div id="createInputs" class="input-group">
+        <div class="input-row">
+          <input id="customInput" placeholder="e.g. 1,2,3">
+          <input id="searchOnCreate" placeholder="Search (optional)">
+          <button onclick="createCustomArray()">Go</button>
+        </div>
+        <span id="createWarning" style="color: red; font-size: 12px;"></span>
+      </div>
+    </div>
+
+    <div class="panel-group">
+      <button onclick="toggleInputs('searchInputs')">Search</button>
+      <div id="searchInputs" class="input-group">
+        <div class="input-row">
+          <input id="searchValue" placeholder="Search value">
+          <button onclick="linearSearch()">Go</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let array = [-92, 27, -54, -20, 34, null, null, null, null, null];
+    const arrayContainer = document.getElementById('arrayContainer');
+    const searchMessage = document.getElementById('searchMessage');
+
+    function renderArray(highlightedIndices = []) {
+      arrayContainer.innerHTML = '';
+      array.forEach((value, index) => {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        if (highlightedIndices.includes(index)) {
+          cell.classList.add('highlight');
+        }
+        cell.innerHTML = value !== null ? value : '';
+
+        const indexEl = document.createElement('div');
+        indexEl.className = 'index';
+        indexEl.innerText = index;
+
+        cell.appendChild(indexEl);
+        arrayContainer.appendChild(cell);
+      });
+    }
+
+    function toggleInputs(id) {
+      document.querySelectorAll('.input-group').forEach(el => el.style.display = 'none');
+      document.getElementById('createWarning').innerText = '';
+      searchMessage.innerText = '';
+      const elem = document.getElementById(id);
+      if (elem) elem.style.display = 'flex';
+    }
+
+    function createCustomArray() {
+      const input = document.getElementById('customInput').value;
+      const warning = document.getElementById('createWarning');
+      const searchOnCreate = document.getElementById('searchOnCreate').value;
+      warning.innerText = '';
+      searchMessage.innerText = '';
+
+      const values = input.split(',').map(v => parseInt(v.trim())).filter(v => !isNaN(v));
+
+      if (values.length > 16) {
+        warning.innerText = 'Max size is 16';
+        return;
+      }
+
+      array = new Array(16).fill(null);
+      values.forEach((val, i) => array[i] = val);
+      renderArray();
+
+      if (searchOnCreate) {
+        const val = parseInt(searchOnCreate);
+        if (!isNaN(val)) {
+          setTimeout(() => linearSearch(val), 300);
+        }
+      }
+    }
+
+    function linearSearch(value = null) {
+      searchMessage.innerText = '';
+      const searchVal = value !== null ? value : parseInt(document.getElementById('searchValue').value);
+
+      if (isNaN(searchVal)) return;
+
+      let found = false;
+
+      const cells = document.querySelectorAll('.cell');
+      let i = 0;
+
+      function step() {
+        if (i >= array.length || array[i] === null) {
+          if (!found) {
+            searchMessage.innerText = 'Value not found';
+          }
+          return;
+        }
+
+        cells[i].classList.add('highlight');
+        if (array[i] === searchVal) {
+          searchMessage.innerText = 'Value found at index ' + i;
+          found = true;
+          return;
+        }
+
+        setTimeout(() => {
+          cells[i].classList.remove('highlight');
+          i++;
+          step();
+        }, 500);
+      }
+
+      step();
+    }
+
+    renderArray();
+  </script>
+</body>
+</html>

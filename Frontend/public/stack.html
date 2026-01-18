@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Stack Animation</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #fdf6f9;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 60px;
+      height: 100vh;
+    }
+
+    .stack-container {
+      border-left: 2px solid #ff69b4;
+      border-right: 2px solid #ff69b4;
+      border-bottom: 2px solid #ff69b4;
+      border-top: none;
+      border-radius: 10px 10px 0 0;
+      padding: 20px 0;
+      background: white;
+    }
+
+    .stack {
+      display: flex;
+      flex-direction: column-reverse;
+      align-items: center;
+      padding: 0 10px;
+      min-height: 200px;
+    }
+
+    .block {
+      width: 120px;
+      height: 40px;
+      background: #ffb6c1;
+      border: 2px solid #ff69b4;
+      border-radius: 6px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 5px 0;
+      font-weight: bold;
+    }
+
+    .pop-animation {
+      animation: popFadeOut 0.4s forwards;
+    }
+
+    @keyframes popFadeOut {
+      0% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+    }
+
+    .panel {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      background: #d04b6e;
+      padding: 10px;
+      width: 240px;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      border-radius: 8px;
+    }
+
+    .panel button {
+      width: 100%;
+      padding: 6px;
+      border: none;
+      background: #e06a85;
+      color: white;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    .panel button:hover {
+      background: #ff1493;
+    }
+
+    .input-group {
+      display: none;
+      flex-direction: row;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .input-group input {
+      flex: 1;
+      padding: 4px;
+      border-radius: 4px;
+      border: none;
+      background: white;
+      color: black;
+    }
+
+    .input-group button {
+      padding: 4px 8px;
+      background: #e06a85;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    #message {
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Stack Animation</h1>
+    <div class="stack-container">
+      <div class="stack" id="stack"></div>
+    </div>
+    <p id="message"></p>
+  </div>
+
+  <div class="panel">
+    <button onclick="toggleInput('createInput')">Create</button>
+    <div class="input-group" id="createInput">
+      <input type="text" id="stackValues" placeholder="A,B,C" />
+      <button onclick="createStack()">OK</button>
+    </div>
+
+    <button onclick="toggleInput('pushInput')">Push</button>
+    <div class="input-group" id="pushInput">
+      <input type="text" id="pushValue" placeholder="Value" />
+      <button onclick="push()">OK</button>
+    </div>
+
+    <button onclick="pop()">Pop</button>
+    <button onclick="checkIsEmpty()">Is Empty?</button>
+    <button onclick="checkIsFull()">Is Full?</button>
+  </div>
+
+  <script>
+    let stack = ["A", "B", "C"];
+    let maxSize = 6;
+
+    function renderStack() {
+      const stackDiv = document.getElementById("stack");
+      stackDiv.innerHTML = "";
+      stack.forEach(value => {
+        const block = document.createElement("div");
+        block.className = "block";
+        block.textContent = value;
+        stackDiv.appendChild(block);
+      });
+    }
+
+    function push() {
+      const val = document.getElementById("pushValue").value;
+      if (stack.length >= maxSize) {
+        showMessage("Stack is full!");
+        return;
+      }
+      if (!val) {
+        showMessage("Please enter a value.");
+        return;
+      }
+      stack.push(val);
+      document.getElementById("pushValue").value = "";
+      renderStack();
+      showMessage(`Pushed '${val}' to stack.`);
+    }
+
+    function pop() {
+      if (stack.length === 0) {
+        showMessage("Stack is empty!");
+        return;
+      }
+
+      const stackDiv = document.getElementById("stack");
+      const topBlock = stackDiv.lastElementChild;
+      if (topBlock) {
+        topBlock.classList.add("pop-animation");
+        setTimeout(() => {
+          stack.pop();
+          renderStack();
+        }, 400);
+        showMessage(`Popped '${stack[stack.length - 1]}' from stack.`);
+      }
+    }
+
+    function createStack() {
+      const input = document.getElementById("stackValues").value;
+      const values = input.split(",").map(val => val.trim()).filter(val => val);
+
+      if (values.length === 0) {
+        showMessage("Enter comma-separated values to create the stack.");
+        return;
+      }
+
+      if (values.length > 6) {
+        showMessage("Maximum 6 values allowed.");
+        return;
+      }
+
+      stack = values;
+      maxSize = 6;
+      document.getElementById("stackValues").value = "";
+      renderStack();
+      showMessage(`Created stack: ${values.join(", ")}`);
+    }
+
+    function checkIsEmpty() {
+      showMessage(stack.length === 0 ? "Stack is empty." : "Stack is not empty.");
+    }
+
+    function checkIsFull() {
+      showMessage(stack.length === maxSize ? "Stack is full." : "Stack is not full.");
+    }
+
+    function showMessage(msg) {
+      document.getElementById("message").textContent = msg;
+    }
+
+    function toggleInput(id) {
+      document.querySelectorAll('.input-group').forEach(group => {
+        group.style.display = (group.id === id && group.style.display !== 'flex') ? 'flex' : 'none';
+      });
+    }
+
+    window.onload = () => {
+      renderStack();
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+.card-border {
+    position: relative;
+    width: 180vh;
+    height: 600px;
+    background-color: rgba(0, 0, 0, 0.982);
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.card-border::before {
+    content: "";
+    position: absolute;
+    width: 700px;
+    height: 700px;
+    background: radial-gradient(rgb(41, 197, 232), transparent, transparent);
+    left: var(--x, 50%);
+    top: var(--y, 50%);
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.card-border:hover::before {
+    opacity: 1;
+}
+
+.card-border::after {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    background: rgba(18, 18, 18, 0.153);
+    border-radius: 18px;
+}
