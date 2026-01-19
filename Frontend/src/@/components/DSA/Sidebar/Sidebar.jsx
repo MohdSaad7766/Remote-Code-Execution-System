@@ -1,24 +1,25 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import {
-  CodeBracketIcon,
   ChevronDownIcon,
   CircleStackIcon,
   CommandLineIcon,
-  MagnifyingGlassIcon,
   SparklesIcon
 } from "@heroicons/react/24/outline";
 import { motion, AnimatePresence } from "framer-motion";
 import SidebarItem from "./SidebarItem";
 
-const Sidebar = ({ isOpen, setIsOpen }) => {
+// Adding default function to setIsOpen prevents the "is not a function" error
+const Sidebar = ({ isOpen = false, setIsOpen = () => {} }) => {
   const [activeDropdown, setActiveDropdown] = useState("ds");
   const location = useLocation();
 
-  // Close sidebar on mobile when route changes
   useEffect(() => {
-    if (window.innerWidth < 1024) setIsOpen(false);
-  }, [location, setIsOpen]);
+    // Close sidebar automatically when clicking a link on mobile
+    if (window.innerWidth < 1024) {
+      setIsOpen(false);
+    }
+  }, [location.pathname]); // Listen specifically to path changes
 
   const toggleDropdown = (name) => {
     setActiveDropdown(activeDropdown === name ? null : name);
@@ -26,41 +27,13 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
   return (
     <>
-      {/* Mobile Overlay */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setIsOpen(false)}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[45] lg:hidden"
-          />
-        )}
-      </AnimatePresence>
-
       <motion.aside
         initial={false}
         animate={{ x: isOpen ? 0 : (window.innerWidth < 1024 ? -300 : 0) }}
-        className={`fixed top-0 left-0 bottom-0 w-[300px] bg-[#111111] border-r border-white/5 z-[50] flex flex-col transition-all duration-300 shadow-2xl`}
+        className="fixed top-0 left-0 bottom-0 w-[300px] bg-[#111111] border-r border-white/5 z-[50] flex flex-col transition-all duration-300 shadow-2xl"
       >
-        {/* Header */}
-        {/* <div className="p-6 flex items-center gap-3 border-b border-white/5">
-          <div className="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-600/20">
-            <CodeBracketIcon className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h1 className="font-black text-lg tracking-tight uppercase italic">
-              CODE<span className="text-blue-500">LAB</span>
-            </h1>
-            <p className="text-[10px] text-gray-500 font-bold tracking-widest uppercase">DSA Masterclass</p>
-          </div>
-        </div> */}
-
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-2 pt-25 no-scrollbar">
+        <div className="flex-1 overflow-y-auto p-4 space-y-2 pt-24 no-scrollbar">
           
-          {/* Section: Data Structures */}
           <DropdownGroup
             title="Data Structures"
             icon={<CircleStackIcon className="w-5 h-5" />}
@@ -76,7 +49,6 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             <SidebarItem text="Linked Lists" path="/dsa/linked-lists" />
           </DropdownGroup>
 
-          {/* Section: Algorithms */}
           <DropdownGroup
             title="Algorithms"
             icon={<CommandLineIcon className="w-5 h-5" />}
@@ -89,7 +61,6 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             <SidebarItem text="Prim's Algo" path="/dsa/algorithm/prims" />
           </DropdownGroup>
 
-          {/* Section: Advanced */}
           <DropdownGroup
             title="Techniques"
             icon={<SparklesIcon className="w-5 h-5" />}
@@ -100,14 +71,6 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             <SidebarItem text="Backtracking" path="/dsa/backtracking" />
           </DropdownGroup>
         </div>
-
-        {/* Footer Info */}
-        {/* <div className="p-4 border-t border-white/5">
-          <div className="bg-white/5 rounded-xl p-3 flex items-center gap-3">
-             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-             <span className="text-xs text-gray-400 font-medium">System Ready</span>
-          </div>
-        </div> */}
       </motion.aside>
     </>
   );
@@ -135,9 +98,7 @@ const DropdownGroup = ({ title, icon, children, isOpen, onClick }) => (
           exit={{ height: 0, opacity: 0 }}
           className="overflow-hidden ml-4 border-l border-white/10"
         >
-          <div className="py-2 pl-4 space-y-1">
-            {children}
-          </div>
+          <div className="py-2 pl-4 space-y-1">{children}</div>
         </motion.div>
       )}
     </AnimatePresence>
