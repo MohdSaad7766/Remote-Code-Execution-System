@@ -56,15 +56,15 @@ public class CodeExecutionService {
                 responseDTO.setSpaceComplexity(complexities.get("SC"));
             }
             else{
-                responseDTO.setTimeComplexity(null);
-                responseDTO.setTimeComplexity(null);
+                responseDTO.setTimeComplexity("NA");
+                responseDTO.setSpaceComplexity("NA");
             }
         }
         else{
             responseDTO.setStatus(SubmissionStatus.INTERNAL_ERROR);
             responseDTO.setError(null);
-            responseDTO.setTimeComplexity(null);
-            responseDTO.setTimeComplexity(null);
+            responseDTO.setTimeComplexity("NA");
+            responseDTO.setSpaceComplexity("NA");
         }
 
         rabbitMQProducerService.sendExecutionResult(responseDTO);

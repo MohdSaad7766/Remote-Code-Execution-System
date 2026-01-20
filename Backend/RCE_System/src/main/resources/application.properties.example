@@ -7,8 +7,8 @@ server.error.include-message=ALWAYS
 
 #Database Config
 spring.datasource.url=jdbc:postgresql://localhost:5432/CodeLab_RCE_DB?useSSL=false
-spring.datasource.username=postgres
-spring.datasource.password=root
+spring.datasource.username=postgresql username
+spring.datasource.password=postgresql password
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.format_sql=true
@@ -16,18 +16,19 @@ spring.jpa.properties.hibernate.format_sql=true
 #Mail Config
 spring.mail.host=smtp.gmail.com
 spring.mail.port=587
-spring.mail.username=code.lab.learn.dsa@gmail.com
-spring.mail.password=tbkw xqwl xpla dmvf
+spring.mail.username= gmail from where we want to send emails
+spring.mail.password= google app password
 spring.mail.properties.mail.smtp.auth=true
 spring.mail.properties.mail.smtp.starttls.enable=true
 
 #Security Config
-jwt.secret.code=Y3Nuc2Zqc2hmamhhQVNEU0ZqYWo3NzIzRFNeNWRmYSZeZEFeJVEoKClAJClAKSlEc0hKREhKRlN5c3k3Nm1kZnpuYmpk
+jwt.secret.code=base64 of secret code
 jwt.expiration.ms=3600000
 jwt.issuer=RCE_CodeLab.com
 
 #Testcase File Handling
-testcase.base.path =D:\\CodeLab_RCE_System\\Backend\\Testcase
+testcase.base.path =D:\\CodeLab_RCE_System\\Backend\\Testcase   # path where you want to store the testcases
+
 
 
 #Actuator Config

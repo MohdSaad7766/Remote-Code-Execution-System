@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,7 +31,7 @@ public class ComplexityAnalysisService {
 //        this.restTemplate = restTemplate;
 //    }
 
-    public Map<String, String> getTimeAndSpaceComplexity(String code){
+    public Map<String, String> getTimeAndSpaceComplexity(String code)  {
         RestTemplate restTemplate = new RestTemplate();
 
         String prompt = """
@@ -42,22 +44,53 @@ public class ComplexityAnalysisService {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("x-goog-api-key",geminiKey);
+        headers.set("x-goog-api-key", geminiKey);
 
-        GeminiRequestBody  requestBody = GeminiRequestBody.getGeminiRequestDTO(prompt);
-
+        GeminiRequestBody requestBody = GeminiRequestBody.getGeminiRequestDTO(prompt);
         HttpEntity<GeminiRequestBody> httpEntity = new HttpEntity<>(requestBody, headers);
 
-        ResponseEntity<Object> response = restTemplate.exchange(geminiUrl, HttpMethod.POST, httpEntity, Object.class);
-
-        System.out.println(response.getBody());
-
-
         Map<String, String> complexities = new HashMap<>();
+        complexities.put("TC", "NA");
+        complexities.put("SC", "NA");
 
-        complexities.put("TC", "O(n)");
-        complexities.put("SC", "O(1)");
+        try {
+            ResponseEntity<String> response = restTemplate
+                    .exchange(
+                            geminiUrl,
+                            HttpMethod.POST,
+                            httpEntity,
+                            String.class
+                    );
 
-        return complexities;
+            // Parse the JSON
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(response.getBody());
+
+            // Navigate to the text containing TC and SC
+            String text = root
+                    .path("candidates")
+                    .get(0)
+                    .path("content")
+                    .path("parts")
+                    .get(0)
+                    .path("text")
+                    .asString();
+
+            String[] lines = text.split("\n");
+
+            for (String line : lines) {
+                if (line.startsWith("TC:")) {
+                    complexities.put("TC", line.substring(4).trim());
+                } else if (line.startsWith("SC:")) {
+                    complexities.put("SC", line.substring(4).trim());
+                }
+            }
+            return complexities;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return complexities;
+        }
+
     }
 }
