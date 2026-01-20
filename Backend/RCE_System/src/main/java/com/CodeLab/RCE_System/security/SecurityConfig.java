@@ -72,7 +72,9 @@ public class SecurityConfig {
                                 "/contest/get-past-contests/*",
                                 "/contest/get-upcoming-contests/*",
                                 "/contest/get-live-contests/*",
-                                "/manage/**"
+                                "/manage/**",
+                                "/problem/get-solved-ctn-by-user"
+
                         ).permitAll()
                         .requestMatchers("/problem/add", "/contest/add").hasRole("ADMIN")
                         .requestMatchers("/contest/register").hasRole("USER")

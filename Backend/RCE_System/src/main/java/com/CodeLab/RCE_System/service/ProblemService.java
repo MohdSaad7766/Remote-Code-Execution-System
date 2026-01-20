@@ -2,6 +2,7 @@ package com.CodeLab.RCE_System.service;
 
 import com.CodeLab.RCE_System.entity.*;
 import com.CodeLab.RCE_System.enums.Difficulty;
+import com.CodeLab.RCE_System.enums.SubmissionStatus;
 import com.CodeLab.RCE_System.enums.UserProblemStatus;
 import com.CodeLab.RCE_System.repository.CompanyRepository;
 import com.CodeLab.RCE_System.repository.ProblemRepository;
@@ -9,7 +10,6 @@ import com.CodeLab.RCE_System.repository.SubmissionRepository;
 import com.CodeLab.RCE_System.repository.TopicRepository;
 import com.CodeLab.RCE_System.request_dto.ProblemRequestDTO;
 import com.CodeLab.RCE_System.response_dto.*;
-import org.springframework.security.core.parameters.P;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -206,5 +206,13 @@ public class ProblemService {
 
     public List<Testcase> getTestcasesByProblemId(UUID problemId, boolean visibility){
         return problemRepository.findAllTestcasesByProblemId(problemId, visibility);
+    }
+
+    public ProblemCountResponseDTO getProblemSolvedCtn(User user){
+        long problemCtn = problemRepository.count();
+        long problemSolvedCtn = user == null ? 0L: submissionRepository.countProblemsByStatus(user, SubmissionStatus.ACCEPTED);
+
+        ProblemCountResponseDTO dto = new ProblemCountResponseDTO(problemSolvedCtn, problemCtn);
+        return dto;
     }
 }

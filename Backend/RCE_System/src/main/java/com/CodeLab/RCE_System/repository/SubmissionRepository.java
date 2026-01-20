@@ -1,6 +1,8 @@
 package com.CodeLab.RCE_System.repository;
 
 import com.CodeLab.RCE_System.entity.Submission;
+import com.CodeLab.RCE_System.entity.User;
+import com.CodeLab.RCE_System.enums.SubmissionStatus;
 import com.CodeLab.RCE_System.enums.UserProblemStatus;
 import com.CodeLab.RCE_System.response_dto.SubmissionResponseDTO;
 import com.CodeLab.RCE_System.response_dto.UserProblemStatusDTO;
@@ -82,5 +84,15 @@ public interface SubmissionRepository extends JpaRepository<Submission, UUID> {
             @Param("problemId") UUID problemId,
             @Param("userId") UUID userId
     );
+
+
+    @Query("""
+SELECT COUNT(DISTINCT s.problem)
+FROM Submission s
+WHERE s.user = :user
+AND s.status = :status
+""")
+    long countProblemsByStatus(User user, SubmissionStatus status);
+
 
 }

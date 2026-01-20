@@ -115,9 +115,7 @@ public class ProblemController {
 
     }
 
-    public void filterProblem(){
 
-    }
 
     public void updateProblem(){
 
@@ -143,5 +141,22 @@ public class ProblemController {
     @GetMapping("/get-all-companies")
     public ResponseEntity<List<CompanyResponseDTO>> getAllCompanies(){
         return ResponseEntity.ok(problemService.getAllCompanies());
+    }
+
+    @GetMapping("/get-solved-ctn-by-user")
+    public ResponseEntity<ProblemCountResponseDTO> getCtnOfProblemSolvedByUser(){
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth instanceof AnonymousAuthenticationToken || hasRole(auth, "ROLE_ADMIN")) {
+
+            ProblemCountResponseDTO dto = problemService.getProblemSolvedCtn(null);
+            return ResponseEntity.ok(dto);
+        }
+        String email = auth.getName();
+
+
+        User user = appUserService.getUserByEmail(email);
+
+        ProblemCountResponseDTO dto = problemService.getProblemSolvedCtn(user);
+        return ResponseEntity.ok(dto);
     }
 }

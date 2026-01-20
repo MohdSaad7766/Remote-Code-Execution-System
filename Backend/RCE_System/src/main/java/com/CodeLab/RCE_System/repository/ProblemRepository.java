@@ -58,4 +58,6 @@ public interface ProblemRepository extends JpaRepository<Problem, UUID> {
 
     @Query("SELECT t FROM Problem p Join p.testcaseList t WHERE p.id = :problemId AND t.isVisible = :visibility")
     List<Testcase> findAllTestcasesByProblemId(@Param("problemId") UUID problemId ,@Param("visibility") boolean visibility);
+
+    long count();
 }
