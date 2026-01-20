@@ -5,15 +5,6 @@ server.port=8091
 #server.servlet.context-path=/execution
 server.error.include-message=always
 
-#Database Config
-#spring.datasource.url=jdbc:postgresql://localhost:5432/CodeLab_RCE_DB?useSSL=false
-#spring.datasource.username=postgres
-#spring.datasource.password=root
-#
-#spring.jpa.hibernate.ddl-auto=none
-#spring.jpa.show-sql=true
-#spring.jpa.properties.hibernate.format_sql=true
-
 
 # RabbitMQ server
 spring.rabbitmq.host=localhost
@@ -34,4 +25,4 @@ rabbitmq.result.routing=task.result.routing
 
 # Google Gemini
 gemini.api.url=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent
-gemini.api.key=AIzaSyD54pTApIK14bEGCb_PJ1p6hZTWGhEWlqY
+gemini.api.key=gemini api key
