@@ -23,7 +23,7 @@ public class CodeExecutionService {
         this.rabbitMQProducerService = rabbitMQProducerService;
         this.analysisService = analysisService;
     }
-    public void executeCode(CodeExecutionRequestDTO codeDto){
+    public void submitCode(CodeExecutionRequestDTO codeDto){
         Language language = codeDto.getLanguage();
 
 

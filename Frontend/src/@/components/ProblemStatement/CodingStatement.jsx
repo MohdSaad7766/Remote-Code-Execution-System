@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 import CodeContainer from "../CodeSection/CodeContainer";
-import LinkStat from "../LinkStatUrl/LinkStat";
 import Submission from "./submission";
 import Solution from "./Solution";
 import Description from "./Description";
@@ -10,8 +9,6 @@ import { motion } from "framer-motion";
 
 export default function CodingStatement() {
   const { id } = useParams();
-  const navigate = useNavigate();
-
   const [data, setData] = useState(null);
   const [activeTab, setActiveTab] = useState("description");
   const [showAcceptedTab, setShowAcceptedTab] = useState(false);
@@ -35,10 +32,7 @@ export default function CodingStatement() {
     fetch(`http://localhost:8090/problem/get-by-id/${id}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch problem");
-        return res.json();
-      })
+      .then((res) => res.json())
       .then((responseData) => {
         const mappedData = {
           problemId: responseData.id,
@@ -61,7 +55,7 @@ export default function CodingStatement() {
         };
         setData(mappedData);
       })
-      .catch((error) => console.error("Error fetching problem:", error))
+      .catch((err) => console.error(err))
       .finally(() => setLoading(false));
   }, [id, toggles]);
 
@@ -73,57 +67,34 @@ export default function CodingStatement() {
     }
   }, [activeTab, showAcceptedTab, data]);
 
-  const handleTabClick = (tab) => setActiveTab(tab);
-
-  const handleSubmited = (status) => {
-    // Translate judge result to Enum status for immediate UI feedback
-    // If judge says 'accepted', we show 'SOLVED'. Otherwise, 'ATTEMPTED'.
-    const translatedStatus = status === "accepted" ? "SOLVED" : "ATTEMPTED";
-    
-    setSubmissionStatus(translatedStatus);
-    setShowAcceptedTab(true);
-    setActiveTab("accepted");
-    
-    // Trigger re-fetch so 'data.userProblemStatus' eventually syncs with DB
-    setToggles(prev => !prev); 
-  };
-
   const dynamicTabs = [
     { key: "description", label: "Description" },
     { key: "solution", label: "Solution" },
     { key: "submission", label: "Submissions" },
-    ...(showAcceptedTab
-      ? [
-          {
-            key: "accepted",
-            label: submissionStatus === "accepted" ? "Accepted" : "Wrong Answer",
-          },
-        ]
-      : []),
+    ...(showAcceptedTab ? [{ key: "accepted", label: submissionStatus === "SOLVED" ? "Accepted" : "Wrong Answer" }] : []),
   ];
 
-  if (loading) {
-    return <div className="text-white text-center py-8 bg-black min-h-screen">Loading Problem...</div>;
-  }
+  if (loading) return <div className="bg-black text-white h-screen w-screen overflow-hidden flex items-center justify-center">Loading...</div>;
 
   return (
-    <div className="flex flex-col md:flex-row w-full h-screen overflow-hidden bg-black text-white">
-      {/* LEFT PANEL */}
-      <div className="w-full md:w-1/2 border-r border-gray-800 flex flex-col h-full">
+    /* We use h-full and overflow-hidden to lock the container to the parent (which should be h-screen) */
+    <div className="flex w-full overflow-hidden bg-black text-white h-full max-h-full">
+      
+      {/* BOX 1: CODING STATEMENT (Left) */}
+      <div className="flex-1 flex flex-col min-w-0 border-r border-white/10 h-full overflow-hidden">
         
-        {/* STICKY NAVIGATION BAR */}
-        <div className="sticky top-0 z-20 bg-[#0f0f0f] px-6 py-4 border-b border-gray-700 shrink-0">
+        {/* Navigation Bar (Tabs) */}
+        <div className="shrink-0 bg-[#0f0f0f] px-6 py-4 border-b border-white/5">
           <div className="relative flex space-x-6">
             <motion.div
               className="absolute bottom-0 h-1 bg-blue-500 rounded-full"
               animate={sliderStyle}
-              transition={{ type: "spring", stiffness: 500, damping: 30 }}
             />
             {dynamicTabs.map(({ key, label }) => (
               <button
                 key={key}
                 ref={tabRefs[key]}
-                onClick={() => handleTabClick(key)}
+                onClick={() => setActiveTab(key)}
                 className={`relative z-10 pb-1 text-sm font-medium transition-colors ${
                   activeTab === key ? "text-white" : "text-gray-400 hover:text-gray-200"
                 }`}
@@ -134,54 +105,57 @@ export default function CodingStatement() {
           </div>
         </div>
 
-        {/* SCROLLABLE CONTENT AREA */}
-        <div className="flex-1 overflow-y-auto bg-[#0e0e0e] px-6 py-6 custom-scrollbar">
-          {activeTab === "description" && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <Description data={data} submissionStatus={submissionStatus} />
-            </motion.div>
-          )}
-          {activeTab === "solution" && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <Solution data={data} />
-            </motion.div>
-          )}
-          {activeTab === "submission" && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <Submission problemId={id} />
-            </motion.div>
-          )}
-          {activeTab === "accepted" && showAcceptedTab && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <Accepted activeStatus={dynamicTabs.find((tab) => tab.key === "accepted")} />
-            </motion.div>
-          )}
+        {/* Content Area - pb-20 ensures the "last part" (Topic Tags) is scrollable into view */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#0e0e0e] px-6 py-6 pb-20">
+          {activeTab === "description" && <Description data={data} />}
+          {activeTab === "solution" && <Solution data={data} />}
+          {activeTab === "submission" && <Submission problemId={id} />}
+          {activeTab === "accepted" && <Accepted activeStatus={dynamicTabs.find(t => t.key === "accepted")} />}
         </div>
       </div>
 
-      {/* RIGHT PANEL (Editor) */}
-      <div className="w-full md:w-1/2 bg-[#0d0d0d] flex flex-col border-l border-gray-800 h-full overflow-hidden">
+      {/* BOX 2: CODE CONTAINER (Right) */}
+      <div className="flex-1 flex flex-col min-w-0 bg-[#0d0d0d] overflow-hidden h-full">
         <CodeContainer
-          onSubmit={handleSubmited}
+          onSubmit={(status) => {
+            setSubmissionStatus(status === "accepted" ? "SOLVED" : "ATTEMPTED");
+            setShowAcceptedTab(true);
+            setActiveTab("accepted");
+            setToggles(p => !p);
+          }}
           code={data}
           setToggles={setToggles}
         />
       </div>
 
-      {/* Internal CSS for the scrollbar */}
-      <style jsx>{`
+      <style>{`
+        /* Kill the white line by ensuring the root doesn't have extra space */
+        html, body, #root {
+          margin: 0 !important;
+          padding: 0 !important;
+          height: 100vh !important;
+          width: 100vw !important;
+          overflow: hidden !important;
+          background-color: #000000 !important;
+        }
+
+        /* Specifically hide the footer component */
+        footer {
+          display: none !important;
+        }
+
         .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
+          width: 5px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
+          background: #0a0a0a;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #2d2d2d;
+          background: #333;
           border-radius: 10px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #3f3f3f;
+          background: #444;
         }
       `}</style>
     </div>
