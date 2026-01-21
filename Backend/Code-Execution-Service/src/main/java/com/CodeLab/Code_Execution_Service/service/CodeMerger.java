@@ -1,31 +1,32 @@
 package com.CodeLab.Code_Execution_Service.service;
 
+import com.CodeLab.Code_Execution_Service.DTO.RunCodeRequestDTO;
+import com.CodeLab.Code_Execution_Service.enums.Language;
 import common.CodeExecutionRequestDTO;
 
 import java.util.*;
 
 public class CodeMerger {
-    public static String mergeCode(CodeExecutionRequestDTO dto) {
-        switch (dto.getLanguage()) {
+    public static String mergeCode(Language language, String mainCode, String userCode) {
+        switch (language) {
             case JAVA:
-                return mergeJavaCode(dto);
+                return mergeJavaCode(mainCode, userCode);
             case CPP:
-                return mergeCppCode(dto);
+                return mergeCppCode(mainCode, userCode);
             case C:
-                return mergeCCode(dto);
+                return mergeCCode(mainCode, userCode);
             case JAVA_SCRIPT:
-                return mergeJavaScriptCode(dto);
+                return mergeJavaScriptCode(mainCode, userCode);
             case PYTHON:
-                return mergePythonCode(dto);
+                return mergePythonCode(mainCode, userCode);
             default:
                 throw new IllegalArgumentException("Unsupported language");
         }
     }
 
-    public static String mergeJavaCode(CodeExecutionRequestDTO dto) {
 
-        String mainCode = dto.getMainCode();
-        String userCode = dto.getUserCode();
+
+    public static String mergeJavaCode(String mainCode,  String userCode) {
 
         Set<String> imports = new LinkedHashSet<>();
         StringBuilder body = new StringBuilder();
@@ -79,10 +80,7 @@ public class CodeMerger {
     }
 
 
-    public static String mergeCppCode(CodeExecutionRequestDTO dto) {
-
-        String userCode = dto.getUserCode();
-        String mainCode = dto.getMainCode();
+    public static String mergeCppCode(String mainCode,  String userCode) {
 
         Set<String> includes = new LinkedHashSet<>();
         boolean hasUsingStd = false;
@@ -145,9 +143,9 @@ public class CodeMerger {
     }
 
 
-    public static String mergeCCode(CodeExecutionRequestDTO dto) {
-        String userCode = dto.getUserCode() == null ? "" : dto.getUserCode().strip();
-        String mainCode = dto.getMainCode() == null ? "" : dto.getMainCode().strip();
+    public static String mergeCCode(String mainCode,  String userCode) {
+        userCode = (userCode == null) ? "" : userCode.strip();
+        mainCode = (mainCode == null) ? "" : mainCode.strip();
 
         Set<String> includes = new LinkedHashSet<>();
         StringBuilder body = new StringBuilder();
@@ -224,19 +222,19 @@ public class CodeMerger {
 
 
 
-    public static String mergeJavaScriptCode(CodeExecutionRequestDTO dto) {
-        if (dto.getUserCode() == null || dto.getUserCode().isBlank()) {
-            return dto.getMainCode();
+    public static String mergeJavaScriptCode(String mainCode,  String userCode) {
+        if (userCode == null || userCode.isBlank()) {
+            return mainCode;
         }
         // Ensure proper spacing between user code and main code
-        return dto.getUserCode().stripTrailing() + "\n\n" + dto.getMainCode().stripLeading();
+        return userCode.stripTrailing() + "\n\n" + mainCode.stripLeading();
     }
 
-    public static String mergePythonCode(CodeExecutionRequestDTO dto) {
-        if (dto.getUserCode() == null || dto.getUserCode().isBlank()) {
-            return dto.getMainCode();
+    public static String mergePythonCode(String mainCode,  String userCode) {
+        if (userCode == null || userCode.isBlank()) {
+            return mainCode;
         }
         // Properly join user code and main code with spacing
-        return dto.getUserCode().stripTrailing() + "\n\n" + dto.getMainCode().stripLeading();
+        return userCode.stripTrailing() + "\n\n" + mainCode.stripLeading();
     }
 }

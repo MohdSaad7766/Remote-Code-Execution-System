@@ -1,79 +1,33 @@
 package com.CodeLab.Code_Execution_Service.service;
 
 import com.CodeLab.Code_Execution_Service.DTO.CodeExecutionResult;
-import com.CodeLab.Code_Execution_Service.enums.Language;
-import com.CodeLab.Code_Execution_Service.enums.SubmissionStatus;
-import com.CodeLab.Code_Execution_Service.rabbitMQ.RabbitMQProducerService;
+import com.CodeLab.Code_Execution_Service.DTO.RunCodeRequestDTO;
 import common.CodeExecutionRequestDTO;
-import common.CodeExecutionResponseDTO;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
-import java.util.Map;
 
 @Service
-public class CodeSubmissionService {
+public class CodeRunService {
+    public String runCode(RunCodeRequestDTO dto){
+        String code = CodeMerger.mergeCode(dto.getLanguage(), dto.getMainCode(), dto.getUserCode());
+        String input = dto.getInput();
 
-    private final ComplexityAnalysisService analysisService;
-    private final RabbitMQProducerService rabbitMQProducerService;
-
-    CodeSubmissionService(RabbitMQProducerService rabbitMQProducerService, ComplexityAnalysisService analysisService){
-        this.rabbitMQProducerService = rabbitMQProducerService;
-        this.analysisService = analysisService;
-    }
-
-
-
-    public void submitCode(CodeExecutionRequestDTO codeDto){
-        Language language = codeDto.getLanguage();
-
-
-        CodeExecutionResult codeExecutionResult =  switch (language) {
-            case C -> cCodeExecutor(codeDto);
-            case CPP -> cppCodeExecutor(codeDto);
-            case JAVA -> javaCodeExecutor(codeDto);
-            case JAVA_SCRIPT -> jsCodeExecutor(codeDto);
-            case PYTHON -> pyCodeExecutor(codeDto);
-            default -> null;
+        String output = switch (dto.getLanguage()){
+            case C -> cCodeExecutor(code, input);
+            case CPP -> cppCodeExecutor(code, input);
+            case JAVA -> javaCodeExecutor(code, input);
+            case JAVA_SCRIPT -> jsCodeExecutor(code, input);
+            case PYTHON -> pyCodeExecutor(code, input);
         };
 
-        CodeExecutionResponseDTO responseDTO = new CodeExecutionResponseDTO();
-
-        responseDTO.setSubmissionId(codeDto.getSubmissionId());
-        responseDTO.setTotalPassedTestcases(100);
-
-
-        responseDTO.setLastInput("Last Intput");
-        responseDTO.setLastOutput("Last Op");
-        responseDTO.setLastExpectedOutput("last Op");
-
-        if(codeExecutionResult != null){
-            responseDTO.setStatus(codeExecutionResult.getStatus());
-            responseDTO.setError(codeExecutionResult.getError());
-
-            if(codeExecutionResult.getStatus() == SubmissionStatus.ACCEPTED){
-                Map<String, String> complexities = analysisService.getTimeAndSpaceComplexity(codeDto.getUserCode());
-                responseDTO.setTimeComplexity(complexities.get("TC"));
-                responseDTO.setSpaceComplexity(complexities.get("SC"));
-            }
-            else{
-                responseDTO.setTimeComplexity("NA");
-                responseDTO.setSpaceComplexity("NA");
-            }
-        }
-        else{
-            responseDTO.setStatus(SubmissionStatus.INTERNAL_ERROR);
-            responseDTO.setError(null);
-            responseDTO.setTimeComplexity("NA");
-            responseDTO.setSpaceComplexity("NA");
-        }
-
-        rabbitMQProducerService.sendExecutionResult(responseDTO);
+        return output;
     }
 
-    private CodeExecutionResult cCodeExecutor(CodeExecutionRequestDTO codeDto) {
+
+    private String cCodeExecutor(String code, String input) {
 
         Path tempDir = null;
 
@@ -84,13 +38,13 @@ public class CodeSubmissionService {
             // 2. Write C source
             Files.writeString(
                     tempDir.resolve("main.c"),
-                    CodeMerger.mergeCCode(codeDto.getMainCode(), codeDto.getUserCode())
+                    code
             );
 
             // 3. Write input
             Files.writeString(
                     tempDir.resolve("input.txt"),
-                    codeDto.getInput()
+                    input
             );
 
             // 4. Docker execution
@@ -112,7 +66,7 @@ public class CodeSubmissionService {
 
             int exitCode = process.waitFor();
 
-            return mapResult(exitCode, output, error, codeDto);
+            return output;
 
         } catch (Exception e) {
             System.err.println("C execution failed: " + e.getMessage());
@@ -129,7 +83,8 @@ public class CodeSubmissionService {
         return null;
     }
 
-    private CodeExecutionResult cppCodeExecutor(CodeExecutionRequestDTO codeDto) {
+
+    private String cppCodeExecutor(String code, String input) {
 
         Path tempDir = null;
 
@@ -140,13 +95,13 @@ public class CodeSubmissionService {
             // 2. Write C++ source
             Files.writeString(
                     tempDir.resolve("main.cpp"),
-                    CodeMerger.mergeCppCode(codeDto.getMainCode(), codeDto.getUserCode())
+                    code
             );
 
             // 3. Write input
             Files.writeString(
                     tempDir.resolve("input.txt"),
-                    codeDto.getInput()
+                    input
             );
 
             // 4. Docker execution
@@ -168,7 +123,7 @@ public class CodeSubmissionService {
 
             int exitCode = process.waitFor();
 
-            return mapResult(exitCode, output, error, codeDto);
+            return output;
 
         } catch (Exception e) {
             System.err.println("C++ execution failed: " + e.getMessage());
@@ -184,7 +139,7 @@ public class CodeSubmissionService {
         return null;
     }
 
-    private CodeExecutionResult javaCodeExecutor(CodeExecutionRequestDTO codeDto) {
+    private String javaCodeExecutor(String code, String input) {
         Path tempDir = null;
 
         try {
@@ -194,13 +149,13 @@ public class CodeSubmissionService {
             // Write Java source
             Files.writeString(
                     tempDir.resolve("Main.java"),
-                    CodeMerger.mergeJavaCode(codeDto.getMainCode(), codeDto.getUserCode())
+                   code
             );
 
             // Write input
             Files.writeString(
                     tempDir.resolve("input.txt"),
-                    codeDto.getInput()
+                    input
             );
 
             // Docker execution
@@ -222,7 +177,7 @@ public class CodeSubmissionService {
 
             int exitCode = process.waitFor();
 
-            return mapResult(exitCode, output, error, codeDto);
+            return output;
 
         } catch (Exception e) {
             System.err.println("Execution failed: " + e.getMessage());
@@ -239,7 +194,7 @@ public class CodeSubmissionService {
         return null;
     }
 
-    private CodeExecutionResult jsCodeExecutor(CodeExecutionRequestDTO codeDto) {
+    private String jsCodeExecutor(String code, String input) {
 
         Path tempDir = null;
 
@@ -250,13 +205,13 @@ public class CodeSubmissionService {
             // 2. Write JS code
             Files.writeString(
                     tempDir.resolve("main.js"),
-                    CodeMerger.mergeJavaScriptCode(codeDto.getMainCode(), codeDto.getUserCode())
+                    code
             );
 
             // 3. Write input
             Files.writeString(
                     tempDir.resolve("input.txt"),
-                    codeDto.getInput()
+                   input
             );
 
             // 4. Run Docker container
@@ -278,7 +233,7 @@ public class CodeSubmissionService {
 
             int exitCode = process.waitFor();
 
-            return mapResult(exitCode, output, error, codeDto);
+            return output;
 
         } catch (Exception e) {
             System.err.println("JS execution failed: " + e.getMessage());
@@ -294,7 +249,7 @@ public class CodeSubmissionService {
         return null;
     }
 
-    private CodeExecutionResult pyCodeExecutor(CodeExecutionRequestDTO codeDto) {
+    private String pyCodeExecutor(String code, String input) {
 
         Path tempDir = null;
 
@@ -305,13 +260,13 @@ public class CodeSubmissionService {
             // 2. Write Python code
             Files.writeString(
                     tempDir.resolve("main.py"),
-                    CodeMerger.mergePythonCode(codeDto.getMainCode(), codeDto.getUserCode())
+                    code
             );
 
             // 3. Write input
             Files.writeString(
                     tempDir.resolve("input.txt"),
-                    codeDto.getInput()
+                    input
             );
 
             // 4. Docker execution
@@ -333,7 +288,7 @@ public class CodeSubmissionService {
 
             int exitCode = process.waitFor();
 
-            return mapResult(exitCode, output, error, codeDto);
+           return output;
 
         } catch (Exception e) {
             System.err.println("Python execution failed: " + e.getMessage());
@@ -347,64 +302,5 @@ public class CodeSubmissionService {
             } catch (Exception ignored) {}
         }
         return null;
-    }
-
-
-
-    private CodeExecutionResult mapResult(int exitCode, String output, String error, CodeExecutionRequestDTO dto) {
-
-        CodeExecutionResult res = new CodeExecutionResult();
-
-        switch (exitCode) {
-
-            case 0 -> {
-                boolean correct = isCorrect(output, dto.getExpectedOutput(), dto.getTotalTestcases());
-                res.setStatus(correct ? SubmissionStatus.ACCEPTED : SubmissionStatus.WRONG_ANSWER);
-                res.setOutput(output);
-            }
-
-            case 10 -> {
-                res.setStatus(SubmissionStatus.COMPILE_ERROR);
-                res.setError(output);
-            }
-
-            case 124 -> {
-                res.setStatus(SubmissionStatus.TIME_LIMIT_EXCEEDED);
-            }
-
-            default -> {
-                res.setStatus(SubmissionStatus.RUNTIME_ERROR);
-                res.setError(output);
-            }
-        }
-
-        return res;
-    }
-
-
-    private boolean isCorrect(String output, String expectedOutput, int totalTestcases) {
-        System.out.println("Output: \n"+output);
-        System.out.println("Expected: \n"+expectedOutput);
-
-        if (output == null || expectedOutput == null) return false;
-
-        String[] outLines = output.trim().split("\\R");
-        String[] expLines = expectedOutput.trim().split("\\R");
-
-        if (outLines.length != expLines.length) return false;
-        if (outLines.length != totalTestcases) return false;
-
-        for (int i = 0; i < totalTestcases; i++) {
-            String op = outLines[i].trim();
-            String expected = expLines[i].trim();
-
-            if (!op.equals(expected)) {
-                System.out.println(op +" != " + expected);
-                System.out.println("Mismatch at test case " + (i + 1));
-                return false;
-            }
-        }
-
-        return true;
     }
 }

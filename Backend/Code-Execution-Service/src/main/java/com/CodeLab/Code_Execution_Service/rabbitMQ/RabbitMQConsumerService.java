@@ -1,6 +1,6 @@
 package com.CodeLab.Code_Execution_Service.rabbitMQ;
 
-import com.CodeLab.Code_Execution_Service.service.CodeExecutionService;
+import com.CodeLab.Code_Execution_Service.service.CodeSubmissionService;
 import common.CodeExecutionRequestDTO;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -10,10 +10,10 @@ import org.springframework.stereotype.Service;
 @RabbitListener(queues = "${rabbitmq.command.queue}")
 public class RabbitMQConsumerService {
 
-    private final CodeExecutionService codeExecutionService;
+    private final CodeSubmissionService codeSubmissionService;
 
-    public RabbitMQConsumerService(CodeExecutionService codeExecutionService){
-        this.codeExecutionService = codeExecutionService;
+    public RabbitMQConsumerService(CodeSubmissionService codeSubmissionService){
+        this.codeSubmissionService = codeSubmissionService;
     }
 
     // Consume simple string messages (optional)
@@ -26,7 +26,7 @@ public class RabbitMQConsumerService {
     @RabbitHandler
     public void consumeMessage(CodeExecutionRequestDTO codeDto){
         System.out.println("Code Received: " + codeDto);
-        codeExecutionService.executeCode(codeDto);
+        codeSubmissionService.submitCode(codeDto);
     }
 }
 
