@@ -9,6 +9,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import Editor from "@monaco-editor/react";
 import DelayButton from "../DelayButton";
+import SubmissionResultModal from "./SubmissionResultModal";
 
 const monacoLangMap = {
   JAVA: "java",
@@ -37,7 +38,8 @@ export default function CodeContainer({ code, onSubmit, setToggles }) {
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [submissionId, setSubmissionId] = useState(null);
   const [pollingActive, setPollingActive] = useState(false);
-  const [resultStatus, setResultStatus] = useState(null);
+  // const [resultStatus, setResultStatus] = useState(null);
+  const [fullSubmissionData, setFullSubmissionData] = useState(null);
   const [showResultPopup, setShowResultPopup] = useState(false);
   const [compileResult, setCompileResult] = useState(null);
   const [showCompilePopup, setShowCompilePopup] = useState(false);
@@ -116,12 +118,12 @@ export default function CodeContainer({ code, onSubmit, setToggles }) {
       if (!response.ok) throw new Error("Code submission failed");
 
       const data = await response.json();
-    
+
       console.log("Code submitted successfully with id:", data.submissionId);
-      
+
       // ✅ Start the polling lifecycle
       setSubmissionId(data.submissionId);
-      setPollingActive(true); 
+      setPollingActive(true);
 
     } catch (error) {
       console.error("Execution error:", error);
@@ -145,29 +147,26 @@ export default function CodeContainer({ code, onSubmit, setToggles }) {
         });
         const data = await res.json();
 
-       
-        
+
+
         if (data.submissionStatus !== "PENDING") {
-          // 1. Stop UI Loaders
           setPollingActive(false);
           setLoadingSubmit(false);
-          
-          // 2. Show Modal
-          setResultStatus(data.submissionStatus);
+
+          // Save the whole DTO instead of just the status string
+          setFullSubmissionData(data);
           setShowResultPopup(true);
 
-          // 3. Update Global Status (Parent Component)
           if (onSubmit) {
-             // Pass 'accepted' or 'wrong_answer' to update the status badge
-             onSubmit(data.submissionStatus.toLowerCase());
+            onSubmit(data.submissionStatus);
           }
-          return true; // Polling finished
+          return true;
         }
       } catch (err) {
         console.error("Poll Error:", err);
         setPollingActive(false);
         setLoadingSubmit(false);
-        return true; 
+        return true;
       }
       return false; // Still pending
     };
@@ -273,27 +272,38 @@ export default function CodeContainer({ code, onSubmit, setToggles }) {
       </div>
 
       {/* RESULT MODALS */}
+      {/* RESULT MODALS */}
       <AnimatePresence>
-        {(showResultPopup || showCompilePopup) && (
+        {/* 1. MAIN SUBMISSION MODAL (Now using Portal) */}
+        {showResultPopup && fullSubmissionData && (
+          <SubmissionResultModal 
+            key="submission-modal"
+            result={fullSubmissionData} 
+            onClose={() => setShowResultPopup(false)} 
+          />
+        )}
+
+        {/* 2. STANDARD RUN/COMPILE POPUP */}
+        {showCompilePopup && !showResultPopup && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              exit={{ opacity: 0, y: 20 }} 
               className="bg-[#0d0d0d] border border-white/10 w-full max-w-lg rounded-2xl shadow-2xl p-8"
             >
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xs font-black text-white uppercase tracking-[0.2em] flex items-center gap-3">
-                  <FiTerminal className="text-blue-500" />
-                  {showResultPopup ? "Submission Result" : compileResult?.verdict}
+                  <FiTerminal className="text-blue-500" /> 
+                  {compileResult?.verdict}
                 </h3>
-                <button onClick={() => { setShowResultPopup(false); setShowCompilePopup(false) }} className="text-zinc-500 hover:text-white transition-colors">
+                <button onClick={() => setShowCompilePopup(false)} className="text-zinc-500 hover:text-white transition-colors">
                   <FiX size={20} />
                 </button>
               </div>
 
               <div className="max-h-[50vh] overflow-auto">
-                {showCompilePopup && compileResult?.type === "success" && (
+                {compileResult?.type === "success" ? (
                   <div className="grid grid-cols-1 gap-3">
                     {compileResult.testResults.map((t, i) => (
                       <div key={i} className="flex items-center justify-between p-4 bg-white/[0.02] rounded-xl border border-white/5">
@@ -304,20 +314,9 @@ export default function CodeContainer({ code, onSubmit, setToggles }) {
                       </div>
                     ))}
                   </div>
-                )}
-
-                {showCompilePopup && compileResult?.type === "error" && (
+                ) : (
                   <div className="text-red-400 bg-red-500/5 p-5 rounded-xl border border-red-500/20 font-mono text-[11px] whitespace-pre-wrap leading-relaxed">
                     {compileResult.message}
-                  </div>
-                )}
-
-                {showResultPopup && (
-                  <div className="text-center py-8">
-                    <div className={`text-4xl font-black italic tracking-tighter uppercase mb-2 ${resultStatus === "ACCEPTED" ? "text-emerald-500" : "text-red-500"}`}>
-                      {resultStatus}
-                    </div>
-                    <p className="text-zinc-500 text-xs font-medium uppercase tracking-widest">Processed successfully</p>
                   </div>
                 )}
               </div>
