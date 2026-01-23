@@ -53,7 +53,8 @@ public interface SubmissionRepository extends JpaRepository<Submission, UUID> {
                 s.spaceComplexity,
                 s.submittedAt,
                 s.totalTestcases,
-                s.totalPassedTestcases
+                s.totalPassedTestcases,
+                s.code
                 )
                 FROM Submission s
                 WHERE s.problem.id = :problemId AND s.user.id = :userId

@@ -24,4 +24,5 @@ public class SubmissionResponseDTO {
     private LocalDateTime submittedAt;
     private int totalTestcases;
     private int totalPassedTestcases;
+    private String code;
 }

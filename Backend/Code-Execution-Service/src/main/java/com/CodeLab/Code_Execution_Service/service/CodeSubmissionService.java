@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
 
@@ -49,9 +50,12 @@ public class CodeSubmissionService {
         if(codeExecutionResult != null){
             responseDTO.setStatus(codeExecutionResult.getStatus());
             responseDTO.setError(codeExecutionResult.getError());
+
             responseDTO.setLastInput(codeExecutionResult.getLastInput());
             responseDTO.setLastOutput(codeExecutionResult.getLastOutput());
             responseDTO.setLastExpectedOutput(codeExecutionResult.getLastExpectedOutput());
+            responseDTO.setTotalPassedTestcases(codeExecutionResult.getTotalPassedTestcases());
+            System.out.println("Total Testcases Passed: "+codeExecutionResult.getTotalPassedTestcases());
 
             if(codeExecutionResult.getStatus() == SubmissionStatus.ACCEPTED){
                 Map<String, String> complexities = analysisService.getTimeAndSpaceComplexity(codeDto.getUserCode());
@@ -360,11 +364,13 @@ public class CodeSubmissionService {
             case 0 -> {
                 TestcaseEvaluationResult result = isCorrect(dto.getInput(), output, dto.getExpectedOutput(), dto.getTotalTestcases());
                 boolean correct = result.isAllTestcasesPassed();
+                System.out.println("Result: "+result);
                 res.setStatus(correct ? SubmissionStatus.ACCEPTED : SubmissionStatus.WRONG_ANSWER);
                 res.setOutput(output);
                 res.setLastInput(result.getLastInput());
                 res.setLastOutput(result.getLastOutput());
                 res.setLastExpectedOutput(result.getLastExpectedOutput());
+                res.setTotalPassedTestcases(result.getTotalTestCasesPassed());
             }
 
             case 10 -> {
@@ -394,11 +400,17 @@ public class CodeSubmissionService {
 
         if (output == null || expectedOutput == null) return result;
 
-        String[] inputLines = input.trim().split("\\R");
+
         String[] outputLines = output.trim().split("\\R");
         String[] expectedOutputLines = expectedOutput.trim().split("\\R");
 
-        if(inputLines.length != totalTestcases+1) return result;
+//        if(inputLines.length != totalTestcases+1){
+//            System.out.println(input);
+//            System.out.println(Arrays.toString(inputLines));
+//            System.out.println("Input Length: "+inputLines.length);
+//            System.out.println("TotalTestCases: "+totalTestcases);
+//            return result;
+//        }
         if (outputLines.length != expectedOutputLines.length) return result;
         if (outputLines.length != totalTestcases) return result;
 
@@ -409,15 +421,17 @@ public class CodeSubmissionService {
         result.setTotalTestCasesPassed(totalTestcases);
         result.setAllTestcasesPassed(true);
 
+        System.out.println("Result From isCorrect-1: "+result);
+
         for (int i = 0; i < totalTestcases; i++) {
-            in = inputLines[i+1].trim();
+//            in = inputLines[i+1].trim();
             op = outputLines[i].trim();
             expected = expectedOutputLines[i].trim();
 
             if (!op.equals(expected)) {
                 System.out.println(op + " != " + expected);
                 System.out.println("Mismatch at test case " + (i + 1));
-                result.setTotalTestCasesPassed(i + 1);
+                result.setTotalTestCasesPassed(i);
                 result.setAllTestcasesPassed(false);
                 break;
             }
@@ -425,6 +439,7 @@ public class CodeSubmissionService {
         result.setLastInput(in);
         result.setLastOutput(op);
         result.setLastExpectedOutput(expected);
+        System.out.println("Result From isCorrect-2: "+result);
 
         return result;
     }

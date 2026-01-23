@@ -3,6 +3,7 @@ package com.CodeLab.RCE_System.repository;
 import com.CodeLab.RCE_System.entity.Problem;
 import com.CodeLab.RCE_System.entity.Testcase;
 import com.CodeLab.RCE_System.enums.Difficulty;
+import com.CodeLab.RCE_System.enums.UserProblemStatus;
 import com.CodeLab.RCE_System.response_dto.ProblemFlatRowDTO;
 import com.CodeLab.RCE_System.response_dto.ProblemResponseDTO;
 import org.springframework.data.domain.Page;

@@ -98,7 +98,8 @@ public class ProblemService {
             String title,
             Difficulty difficulty,
             Set<UUID> topicIds,
-            Set<UUID> companyIds
+            Set<UUID> companyIds,
+            UserProblemStatus status
     ) {
         return fetchProblems(user, pageNo, title, difficulty, topicIds, companyIds);
     }

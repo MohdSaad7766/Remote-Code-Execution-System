@@ -4,6 +4,7 @@ import com.CodeLab.RCE_System.entity.AppUser;
 import com.CodeLab.RCE_System.entity.Problem;
 import com.CodeLab.RCE_System.entity.User;
 import com.CodeLab.RCE_System.enums.Difficulty;
+import com.CodeLab.RCE_System.enums.UserProblemStatus;
 import com.CodeLab.RCE_System.request_dto.ProblemRequestDTO;
 import com.CodeLab.RCE_System.response_dto.*;
 import com.CodeLab.RCE_System.service.AppUserService;
@@ -79,9 +80,10 @@ public class ProblemController {
             @RequestParam(required = false) String title,
             @RequestParam(required = false) Difficulty difficulty,
             @RequestParam(required = false) Set<UUID> topicIds,
-            @RequestParam(required = false) Set<UUID> companyIds
+            @RequestParam(required = false) Set<UUID> companyIds,
+            @RequestParam(required = false) UserProblemStatus status
 
-    ) {
+            ) {
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
@@ -100,7 +102,7 @@ public class ProblemController {
         // Logged-in user
         String email = auth.getName();
         AppUser appUser = appUserService.findByEmail(email);
-        return problemService.getAllProblemsForUser(pageNo, appUser.getUser(), title, difficulty, topicIds, companyIds);
+        return problemService.getAllProblemsForUser(pageNo, appUser.getUser(), title, difficulty, topicIds, companyIds, status);
     }
 
     private boolean hasRole(Authentication auth, String role) {

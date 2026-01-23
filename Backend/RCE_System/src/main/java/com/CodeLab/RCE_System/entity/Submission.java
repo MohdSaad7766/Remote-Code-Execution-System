@@ -81,6 +81,7 @@ public class Submission {
         responseDTO.setSubmittedAt(this.submittedAt);
         responseDTO.setTotalTestcases(this.totalTestcases);
         responseDTO.setTotalPassedTestcases(this.totalPassedTestcases);
+        responseDTO.setCode(this.getCode());
 
         return responseDTO;
     }
