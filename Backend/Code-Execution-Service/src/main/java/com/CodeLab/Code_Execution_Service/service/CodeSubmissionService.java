@@ -1,6 +1,7 @@
 package com.CodeLab.Code_Execution_Service.service;
 
 import com.CodeLab.Code_Execution_Service.DTO.CodeExecutionResult;
+import com.CodeLab.Code_Execution_Service.DTO.TestcaseEvaluationResult;
 import com.CodeLab.Code_Execution_Service.enums.Language;
 import com.CodeLab.Code_Execution_Service.enums.SubmissionStatus;
 import com.CodeLab.Code_Execution_Service.rabbitMQ.RabbitMQProducerService;
@@ -42,16 +43,15 @@ public class CodeSubmissionService {
         CodeExecutionResponseDTO responseDTO = new CodeExecutionResponseDTO();
 
         responseDTO.setSubmissionId(codeDto.getSubmissionId());
-        responseDTO.setTotalPassedTestcases(100);
 
 
-        responseDTO.setLastInput("Last Intput");
-        responseDTO.setLastOutput("Last Op");
-        responseDTO.setLastExpectedOutput("last Op");
 
         if(codeExecutionResult != null){
             responseDTO.setStatus(codeExecutionResult.getStatus());
             responseDTO.setError(codeExecutionResult.getError());
+            responseDTO.setLastInput(codeExecutionResult.getLastInput());
+            responseDTO.setLastOutput(codeExecutionResult.getLastOutput());
+            responseDTO.setLastExpectedOutput(codeExecutionResult.getLastExpectedOutput());
 
             if(codeExecutionResult.getStatus() == SubmissionStatus.ACCEPTED){
                 Map<String, String> complexities = analysisService.getTimeAndSpaceComplexity(codeDto.getUserCode());
@@ -59,15 +59,15 @@ public class CodeSubmissionService {
                 responseDTO.setSpaceComplexity(complexities.get("SC"));
             }
             else{
-                responseDTO.setTimeComplexity("NA");
-                responseDTO.setSpaceComplexity("NA");
+                responseDTO.setTimeComplexity(null);
+                responseDTO.setSpaceComplexity(null);
             }
         }
         else{
             responseDTO.setStatus(SubmissionStatus.INTERNAL_ERROR);
             responseDTO.setError(null);
-            responseDTO.setTimeComplexity("NA");
-            responseDTO.setSpaceComplexity("NA");
+            responseDTO.setTimeComplexity(null);
+            responseDTO.setSpaceComplexity(null);
         }
 
         rabbitMQProducerService.sendExecutionResult(responseDTO);
@@ -358,9 +358,13 @@ public class CodeSubmissionService {
         switch (exitCode) {
 
             case 0 -> {
-                boolean correct = isCorrect(output, dto.getExpectedOutput(), dto.getTotalTestcases());
+                TestcaseEvaluationResult result = isCorrect(dto.getInput(), output, dto.getExpectedOutput(), dto.getTotalTestcases());
+                boolean correct = result.isAllTestcasesPassed();
                 res.setStatus(correct ? SubmissionStatus.ACCEPTED : SubmissionStatus.WRONG_ANSWER);
                 res.setOutput(output);
+                res.setLastInput(result.getLastInput());
+                res.setLastOutput(result.getLastOutput());
+                res.setLastExpectedOutput(result.getLastExpectedOutput());
             }
 
             case 10 -> {
@@ -382,29 +386,46 @@ public class CodeSubmissionService {
     }
 
 
-    private boolean isCorrect(String output, String expectedOutput, int totalTestcases) {
+    private TestcaseEvaluationResult isCorrect(String input, String output, String expectedOutput, int totalTestcases) {
+        TestcaseEvaluationResult result = new TestcaseEvaluationResult();
+
         System.out.println("Output: \n"+output);
         System.out.println("Expected: \n"+expectedOutput);
 
-        if (output == null || expectedOutput == null) return false;
+        if (output == null || expectedOutput == null) return result;
 
-        String[] outLines = output.trim().split("\\R");
-        String[] expLines = expectedOutput.trim().split("\\R");
+        String[] inputLines = input.trim().split("\\R");
+        String[] outputLines = output.trim().split("\\R");
+        String[] expectedOutputLines = expectedOutput.trim().split("\\R");
 
-        if (outLines.length != expLines.length) return false;
-        if (outLines.length != totalTestcases) return false;
+        if(inputLines.length != totalTestcases+1) return result;
+        if (outputLines.length != expectedOutputLines.length) return result;
+        if (outputLines.length != totalTestcases) return result;
+
+
+        String in = null;
+        String op = null;
+        String expected = null;
+        result.setTotalTestCasesPassed(totalTestcases);
+        result.setAllTestcasesPassed(true);
 
         for (int i = 0; i < totalTestcases; i++) {
-            String op = outLines[i].trim();
-            String expected = expLines[i].trim();
+            in = inputLines[i+1].trim();
+            op = outputLines[i].trim();
+            expected = expectedOutputLines[i].trim();
 
             if (!op.equals(expected)) {
-                System.out.println(op +" != " + expected);
+                System.out.println(op + " != " + expected);
                 System.out.println("Mismatch at test case " + (i + 1));
-                return false;
+                result.setTotalTestCasesPassed(i + 1);
+                result.setAllTestcasesPassed(false);
+                break;
             }
         }
+        result.setLastInput(in);
+        result.setLastOutput(op);
+        result.setLastExpectedOutput(expected);
 
-        return true;
+        return result;
     }
 }
