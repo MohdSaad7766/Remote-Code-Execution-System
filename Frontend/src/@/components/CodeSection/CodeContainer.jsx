@@ -112,6 +112,7 @@ export default function CodeContainer({ code, onSubmit, setToggles }) {
           language: selectedLanguage,
           userCode: codeValue,
           mainCode: template?.invisibleTemplateCode || "",
+          executionType: "NORMAL_SUBMIT"
         }),
       });
 
