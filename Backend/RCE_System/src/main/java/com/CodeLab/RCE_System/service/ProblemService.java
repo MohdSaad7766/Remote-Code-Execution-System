@@ -28,7 +28,7 @@ public class ProblemService {
     private final CompanyRepository companyRepository;
     private final ProblemRepository problemRepository;
     private final TestcaseFileService testcaseFileService;
-    private final int pageSize = 10;
+    private final int PAGE_SIZE = 10;
     private final SubmissionRepository submissionRepository;
 
 
@@ -113,7 +113,7 @@ public class ProblemService {
             Set<UUID> companyIds
     ) {
 
-        Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by("createdAt").ascending());
+        Pageable pageable = PageRequest.of(pageNo, PAGE_SIZE, Sort.by("createdAt").ascending());
 
         // Fetch filtered problem IDs
         Page<UUID> problemIdsPage = problemRepository.findProblemIdsWithFilters(

@@ -2,6 +2,7 @@ package com.CodeLab.RCE_System.controller;
 
 import com.CodeLab.RCE_System.entity.User;
 import com.CodeLab.RCE_System.request_dto.SubmitCodeRequestDTO;
+import com.CodeLab.RCE_System.response_dto.PaginatedResponse;
 import com.CodeLab.RCE_System.response_dto.SubmissionResponseDTO;
 import com.CodeLab.RCE_System.response_dto.SubmissionIdResponseDTO;
 import com.CodeLab.RCE_System.service.AppUserService;
@@ -43,15 +44,18 @@ public class SubmissionController {
         return ResponseEntity.ok(responseDTO);
     }
 
-    @GetMapping("/get-by-problem-id")
-    public ResponseEntity<List<SubmissionResponseDTO>> getAllSubmission(@RequestParam UUID problemId){
+
+
+    @GetMapping("/get-by-problem-id/{pageNo}")
+    public PaginatedResponse<SubmissionResponseDTO> getAllSubmission(@PathVariable(required = false) int pageNo, @RequestParam UUID problemId){
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
         User user = appUserService.getUserByEmail(email);
 
-        List<SubmissionResponseDTO> responseDTO = submissionService.getAllSubmissionsByProblemIdAndUserId(problemId, user);
+        PaginatedResponse<SubmissionResponseDTO> responseDTO = submissionService.getAllSubmissionsByProblemIdAndUserId(pageNo, problemId, user);
 
-        return ResponseEntity.ok(responseDTO);
+        return responseDTO;
     }
 
     @GetMapping("/get-by-id/{id}")

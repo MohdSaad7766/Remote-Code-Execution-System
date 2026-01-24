@@ -6,6 +6,8 @@ import com.CodeLab.RCE_System.enums.SubmissionStatus;
 import com.CodeLab.RCE_System.enums.UserProblemStatus;
 import com.CodeLab.RCE_System.response_dto.SubmissionResponseDTO;
 import com.CodeLab.RCE_System.response_dto.UserProblemStatusDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -59,8 +61,8 @@ public interface SubmissionRepository extends JpaRepository<Submission, UUID> {
                 FROM Submission s
                 WHERE s.problem.id = :problemId AND s.user.id = :userId
             """)
-    List<SubmissionResponseDTO> getAllSubmissionsByProblemIdAndUserId(@Param("problemId") UUID problemId,
-                                                                      @Param("userId") UUID userId);
+    Page<SubmissionResponseDTO> getAllSubmissionsByProblemIdAndUserId(@Param("problemId") UUID problemId,
+                                                                           @Param("userId") UUID userId, Pageable pageable);
 
     @Query("""
         SELECT
