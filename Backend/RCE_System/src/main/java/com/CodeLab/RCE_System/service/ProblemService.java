@@ -42,6 +42,8 @@ public class ProblemService {
         this.submissionRepository = submissionRepository;
     }
 
+
+
     public List<TopicResponseDTO> getAllTopics(){
         Sort sort = Sort.by("topicName").ascending();
         return topicRepository.findAllTopics(sort);
@@ -52,6 +54,23 @@ public class ProblemService {
         return companyRepository.findAllCompanies(sort);
     }
 
+    public void addTopic(String topicName){
+        Topic topic = new Topic();
+        topic.setTopicName(topicName);
+
+        if(!topicRepository.existsByTopicName(topicName)){
+            topicRepository.save(topic);
+        }
+    }
+
+    public void addCompany(String companyName){
+        Company company = new Company();
+        company.setCompanyName(companyName);
+
+        if(!companyRepository.existsByCompanyName(companyName)){
+            companyRepository.save(company);
+        }
+    }
     @Transactional
     public Problem addProblem(ProblemRequestDTO dto, boolean visibility){
 //        System.out.println(dto.getTestcaseList());
@@ -69,7 +88,7 @@ public class ProblemService {
     }
 
     @Transactional(readOnly = true)
-    public PaginatedResponse<ProblemListResponseDTO> getAllProblemsForGuestOrAdmin(
+    public PaginatedResponse<ProblemListResponseDTO> getAllProblemsForAnonymousUser(
             int pageNo,
             String title,
             Difficulty difficulty,
@@ -215,5 +234,14 @@ public class ProblemService {
 
         ProblemCountResponseDTO dto = new ProblemCountResponseDTO(problemSolvedCtn, problemCtn);
         return dto;
+    }
+
+
+    public void deleteProblemById(UUID problemId){
+        if(problemRepository.findById(problemId).isPresent())
+            problemRepository.deleteById(problemId);
+        else{
+            System.out.println("Problem with id-"+problemId+" not found!!!");
+        }
     }
 }

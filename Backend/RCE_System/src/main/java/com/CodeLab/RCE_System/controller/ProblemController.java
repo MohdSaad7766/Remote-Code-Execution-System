@@ -91,12 +91,12 @@ public class ProblemController {
 
         // Guest
         if (auth == null || auth instanceof AnonymousAuthenticationToken) {
-            return problemService.getAllProblemsForGuestOrAdmin(pageNo, title, difficulty, topicIds, companyIds);
+            return problemService.getAllProblemsForAnonymousUser(pageNo, title, difficulty, topicIds, companyIds);
         }
 
         // Admin
         if (hasRole(auth, "ROLE_ADMIN")) {
-            return problemService.getAllProblemsForGuestOrAdmin(pageNo, title, difficulty, topicIds, companyIds);
+            return problemService.getAllProblemsForAnonymousUser(pageNo, title, difficulty, topicIds, companyIds);
         }
 
         // Logged-in user
@@ -112,18 +112,14 @@ public class ProblemController {
         return false;
     }
 
-    @GetMapping("/search/{keyword}")
-    public void searchProblem(@PathVariable String keyword){
+
+    @PutMapping("/update-by-id/{problemId}")
+    public void updateProblem(@PathVariable UUID problemId){
 
     }
 
-
-
-    public void updateProblem(){
-
-    }
-
-    public void deleteProblem(){
+    @DeleteMapping("/delete-by-id/{problemId}")
+    public void deleteProblemById(@PathVariable UUID problemId){
 
     }
 
@@ -132,12 +128,16 @@ public class ProblemController {
         return ResponseEntity.ok(problemService.getAllTopics());
     }
 
-    public void addTopic(){
-
+    @PostMapping("/add-topic")
+    public ResponseEntity<String> addTopic(@RequestParam String topicName){
+        problemService.addTopic(topicName);
+        return ResponseEntity.ok("Topic added successfully if already not exists.");
     }
 
-    public void addCompany(){
-
+    @PostMapping("/add-company")
+    public ResponseEntity<String> addCompany(@RequestParam String companyName){
+        problemService.addCompany(companyName);
+        return ResponseEntity.ok("Company added successfully if already not exists.");
     }
 
     @GetMapping("/get-all-companies")

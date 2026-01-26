@@ -76,7 +76,7 @@ public class SecurityConfig {
                                 "/problem/get-solved-ctn-by-user"
 
                         ).permitAll()
-                        .requestMatchers("/problem/add", "/contest/add").hasRole("ADMIN")
+                        .requestMatchers("/problem/add", "/contest/add","/problem/add-company", "/problem//add-topic").hasRole("ADMIN")
                         .requestMatchers("/contest/register").hasRole("USER")
                         .anyRequest().authenticated()
                 )

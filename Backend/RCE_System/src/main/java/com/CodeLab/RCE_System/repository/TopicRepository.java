@@ -30,4 +30,5 @@ public interface TopicRepository extends JpaRepository<Topic, UUID> {
             SELECT t FROM Topic t WHERE t.id IN (:topicList)
             """)
     Set<Topic> findAllTopicsIn(@Param("topicList") Set<UUID> topicList);
+
 }
