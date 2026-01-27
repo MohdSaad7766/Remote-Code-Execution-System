@@ -97,45 +97,45 @@ export default function CodeContainer({ code, onSubmit, setToggles }) {
   };
 
   const handleExecute = async () => {
-  setLoadingSubmit(true);
-  const template = code?.codeTemplates?.find((item) => item.language === selectedLanguage);
+    setLoadingSubmit(true);
+    const template = code?.codeTemplates?.find((item) => item.language === selectedLanguage);
 
-  try {
-    const response = await fetch("http://localhost:8090/submission/submit-code", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
-      },
-      body: JSON.stringify({
-        problemId: code.problemId,
-        contestId: null, // As requested for normal submissions
-        language: selectedLanguage,
-        userCode: codeValue,
-        mainCode: template?.invisibleTemplateCode || "",
-        executionType: "NORMAL_SUBMIT"
-      }),
-    });
+    try {
+      const response = await fetch("http://localhost:8090/submission/submit-code", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: JSON.stringify({
+          problemId: code.problemId,
+          contestId: null, // As requested for normal submissions
+          language: selectedLanguage,
+          userCode: codeValue,
+          mainCode: template?.invisibleTemplateCode || "",
+          executionType: "NORMAL_SUBMIT"
+        }),
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Code submission failed");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Code submission failed");
+      }
+
+      const data = await response.json();
+
+      console.log("Code submitted successfully with id:", data.submissionId);
+
+      // ✅ Start the polling lifecycle
+      setSubmissionId(data.submissionId);
+      setPollingActive(true);
+
+    } catch (error) {
+      console.error("Execution error:", error);
+      // You might want to show a toast or alert here
+      setLoadingSubmit(false);
     }
-
-    const data = await response.json();
-
-    console.log("Code submitted successfully with id:", data.submissionId);
-
-    // ✅ Start the polling lifecycle
-    setSubmissionId(data.submissionId);
-    setPollingActive(true);
-
-  } catch (error) {
-    console.error("Execution error:", error);
-    // You might want to show a toast or alert here
-    setLoadingSubmit(false);
-  }
-};
+  };
 
   /**
    * Polling logic: 
@@ -282,25 +282,25 @@ export default function CodeContainer({ code, onSubmit, setToggles }) {
       <AnimatePresence>
         {/* 1. MAIN SUBMISSION MODAL (Now using Portal) */}
         {showResultPopup && fullSubmissionData && (
-          <SubmissionResultModal 
+          <SubmissionResultModal
             key="submission-modal"
-            result={fullSubmissionData} 
-            onClose={() => setShowResultPopup(false)} 
+            result={fullSubmissionData}
+            onClose={() => setShowResultPopup(false)}
           />
         )}
 
         {/* 2. STANDARD RUN/COMPILE POPUP */}
         {showCompilePopup && !showResultPopup && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }} 
-              animate={{ opacity: 1, y: 0 }} 
-              exit={{ opacity: 0, y: 20 }} 
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
               className="bg-[#0d0d0d] border border-white/10 w-full max-w-lg rounded-2xl shadow-2xl p-8"
             >
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xs font-black text-white uppercase tracking-[0.2em] flex items-center gap-3">
-                  <FiTerminal className="text-blue-500" /> 
+                  <FiTerminal className="text-blue-500" />
                   {compileResult?.verdict}
                 </h3>
                 <button onClick={() => setShowCompilePopup(false)} className="text-zinc-500 hover:text-white transition-colors">
