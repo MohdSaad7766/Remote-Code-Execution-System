@@ -4,6 +4,7 @@ import com.CodeLab.RCE_System.enums.Language;
 import com.CodeLab.RCE_System.enums.SubmissionStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -19,6 +20,7 @@ public class ContestProblemSubmission {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID submissionId;
 
+    @CreationTimestamp
     private LocalDateTime submittedAt;
 
     private int totalTestcases;
@@ -32,7 +34,7 @@ public class ContestProblemSubmission {
     private String code;
 
     @Enumerated(EnumType.STRING)
-    private SubmissionStatus submissionStatus;
+    private SubmissionStatus status;
 
     @Enumerated(EnumType.STRING)
     private Language language;

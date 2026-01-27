@@ -14,6 +14,7 @@ import java.util.UUID;
 
 public class SubmitCodeRequestDTO {
     private UUID problemId;
+    private UUID contestId;
     private Language language;
     private String userCode;
     private String mainCode;

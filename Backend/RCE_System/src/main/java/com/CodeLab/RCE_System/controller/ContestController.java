@@ -110,13 +110,15 @@ public class ContestController {
 
 
     @PostMapping("/user-start")
-    public void startContest(@RequestParam UUID contestId){
+    public ResponseEntity<String> startContest(@RequestParam UUID contestId){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         String email = authentication.getName();
         User user = appUserService.getUserByEmail(email);
 
         contestService.startContest(contestId, user);
+        return ResponseEntity.ok("User Started the Contest");
+
 
     }
 

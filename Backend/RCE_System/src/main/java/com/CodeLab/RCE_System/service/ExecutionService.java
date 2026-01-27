@@ -1,11 +1,9 @@
 package com.CodeLab.RCE_System.service;
 
-import com.CodeLab.RCE_System.entity.Problem;
-import com.CodeLab.RCE_System.entity.Submission;
-import com.CodeLab.RCE_System.entity.Testcase;
-import com.CodeLab.RCE_System.entity.User;
+import com.CodeLab.RCE_System.entity.*;
 import com.CodeLab.RCE_System.enums.ExecutionType;
 import com.CodeLab.RCE_System.enums.SubmissionStatus;
+import com.CodeLab.RCE_System.exception.ContestException;
 import com.CodeLab.RCE_System.rabbitMQ.RabbitMQProducerService;
 import com.CodeLab.RCE_System.request_dto.CodeRequestDTO;
 import com.CodeLab.RCE_System.request_dto.SubmitCodeRequestDTO;
@@ -26,17 +24,23 @@ public class ExecutionService {
     private final TestcaseFileService testcaseFileService;
     private final RabbitMQProducerService rabbitMQProducerService;
     private final SubmissionService submissionService;
+    private final ContestSubmissionService contestSubmissionService;
+    private final ContestService contestService;
 
     @Autowired
     public ExecutionService(ProblemService problemService,
                             TestcaseFileService testcaseFileService,
                             RabbitMQProducerService rabbitMQProducerService,
-                            SubmissionService submissionService){
+                            SubmissionService submissionService,
+                            ContestSubmissionService contestSubmissionService,
+                            ContestService contestService){
 
         this.problemService = problemService;
         this.testcaseFileService = testcaseFileService;
         this.rabbitMQProducerService = rabbitMQProducerService;
         this.submissionService = submissionService;
+        this.contestSubmissionService = contestSubmissionService;
+        this.contestService = contestService;
     }
 
 
@@ -73,7 +77,8 @@ public class ExecutionService {
         executionRequestDTO.setLanguage(dto.getLanguage());
         executionRequestDTO.setMainCode(dto.getMainCode());
         executionRequestDTO.setUserCode(dto.getUserCode());
-        executionRequestDTO.setExecutionType(ExecutionType.NORMAL_SUBMIT);
+
+        executionRequestDTO.setExecutionType(dto.getExecutionType());
         executionRequestDTO.setUserId(user.getId());
         executionRequestDTO.setTotalTestcases(testcases.size());
         executionRequestDTO.setInput(input);
@@ -84,21 +89,49 @@ public class ExecutionService {
 
         Problem problem = problemService.getAProblemById(dto.getProblemId());
 
-        Submission submission = new Submission();
-        submission.setCode(dto.getUserCode());
-        submission.setLanguage(dto.getLanguage());
-        submission.setTotalTestcases(testcases.size());
-        submission.setSubmittedAt(LocalDateTime.now());
-        submission.setStatus(SubmissionStatus.PENDING);
-        submission.setUser(user);
-        submission.setProblem(problem);
+        if(dto.getExecutionType() == ExecutionType.NORMAL_SUBMIT){
+            Submission submission = new Submission();
+            submission.setCode(dto.getUserCode());
+            submission.setLanguage(dto.getLanguage());
+            submission.setTotalTestcases(testcases.size());
+            submission.setStatus(SubmissionStatus.PENDING);
+            submission.setUser(user);
+            submission.setProblem(problem);
 
-        submission = submissionService.addSubmission(submission);
+            submission = submissionService.addSubmission(submission);
+            executionRequestDTO.setSubmissionId(submission.getId());
+            executionRequestDTO.setProblemId(problem.getId());
+            rabbitMQProducerService.executeCode(executionRequestDTO);
+            return new SubmissionIdResponseDTO(submission.getId(), dto.getExecutionType());
+        }
+        else if(dto.getExecutionType() == ExecutionType.CONTEST_SUBMIT){
+            Contest contest = contestService.getContestById(dto.getContestId());
 
-        executionRequestDTO.setSubmissionId(submission.getId());
-        executionRequestDTO.setProblemId(problem.getId());
-        rabbitMQProducerService.executeCode(executionRequestDTO);
-        return new SubmissionIdResponseDTO(submission.getId());
+            if(contest.getStartTime().isAfter(LocalDateTime.now())){
+                throw new ContestException("Contest has not been started yet, so you can't submit");
+            }
+            if(contest.getEndTime().isBefore(LocalDateTime.now())){
+                throw new ContestException("Contest has been ended, so you can't submit");
 
+            }
+
+            ContestProblemSubmission submission = new ContestProblemSubmission();
+            submission.setCode(dto.getUserCode());
+            submission.setLanguage(dto.getLanguage());
+            submission.setTotalTestcases(testcases.size());
+            submission.setStatus(SubmissionStatus.PENDING);
+            submission.setUser(user);
+            submission.setProblem(problem);
+            submission.setContest(contest);
+
+            submission = contestSubmissionService.addSubmission(submission);
+            executionRequestDTO.setSubmissionId(submission.getSubmissionId());
+            executionRequestDTO.setProblemId(problem.getId());
+            rabbitMQProducerService.executeCode(executionRequestDTO);
+            return new SubmissionIdResponseDTO(submission.getSubmissionId(), dto.getExecutionType());
+
+
+        }
+        return null;
     }
 }

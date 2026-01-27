@@ -1,5 +1,8 @@
 package com.CodeLab.RCE_System.rabbitMQ;
 
+import com.CodeLab.RCE_System.entity.ContestProblemSubmission;
+import com.CodeLab.RCE_System.enums.ExecutionType;
+import com.CodeLab.RCE_System.service.ContestSubmissionService;
 import com.CodeLab.RCE_System.service.SubmissionService;
 import common.CodeExecutionRequestDTO;
 import common.CodeExecutionResponseDTO;
@@ -12,9 +15,12 @@ import org.springframework.stereotype.Service;
 public class RabbitMQConsumerService {
 
     private final SubmissionService submissionService;
+    private final ContestSubmissionService contestSubmissionService;
 
-    RabbitMQConsumerService(SubmissionService submissionService){
+    RabbitMQConsumerService(SubmissionService submissionService,
+                            ContestSubmissionService contestSubmissionService){
         this.submissionService = submissionService;
+        this.contestSubmissionService = contestSubmissionService;
     }
     // Optional: consume simple string messages
     @RabbitHandler
@@ -27,6 +33,11 @@ public class RabbitMQConsumerService {
     public void consumeCodeExecutionResult(CodeExecutionResponseDTO result){
         System.out.println("Code Execution Result Received: " + result);
 
-        submissionService.updateSubmission(result);
+        if(result.getExecutionType() == ExecutionType.NORMAL_SUBMIT)
+            submissionService.updateSubmission(result);
+        else if(result.getExecutionType() == ExecutionType.CONTEST_SUBMIT)
+            contestSubmissionService.updateSubmission(result);
+
+
     }
 }

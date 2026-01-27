@@ -1,5 +1,6 @@
 package common;
 
+import com.CodeLab.RCE_System.enums.ExecutionType;
 import com.CodeLab.RCE_System.enums.SubmissionStatus;
 import lombok.*;
 
@@ -28,4 +29,5 @@ public class CodeExecutionResponseDTO {
     private String lastExpectedOutput;
 
     private int totalPassedTestcases;
+    private ExecutionType executionType;
 }

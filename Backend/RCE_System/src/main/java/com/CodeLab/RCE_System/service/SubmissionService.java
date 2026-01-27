@@ -48,8 +48,10 @@ public class SubmissionService {
     public void updateSubmission(CodeExecutionResponseDTO result){
         Submission submission = submissionRepo.findById(result.getSubmissionId()).orElse(null);
 
-        if(submission == null)
+        if(submission == null){
+            System.out.println("Submission is Null, FROM SubmissionService.updateSubmission()");
             return;
+        }
 
         submission.setTotalPassedTestcases(result.getTotalPassedTestcases());
         submission.setStatus(result.getStatus());

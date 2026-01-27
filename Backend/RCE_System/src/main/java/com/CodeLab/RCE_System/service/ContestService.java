@@ -190,4 +190,9 @@ public class ContestService {
         }
         return list;
     }
+
+    public Contest getContestById(UUID contestId){
+        return contestRepository.findById(contestId).orElseThrow(()->
+                new ContestNotFoundException("Contest with id-"+contestId+" not found."));
+    }
 }

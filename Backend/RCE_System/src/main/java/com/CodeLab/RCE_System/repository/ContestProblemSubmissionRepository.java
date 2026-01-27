@@ -14,7 +14,7 @@ import java.util.UUID;
 public interface ContestProblemSubmissionRepository extends JpaRepository<ContestProblemSubmission, UUID> {
 
     @Query("""
-    SELECT cps.submissionStatus
+    SELECT cps.status
     FROM ContestProblemSubmission cps
     WHERE cps.user = :user
       AND cps.contest = :contest

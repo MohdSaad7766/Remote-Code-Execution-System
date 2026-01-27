@@ -2,6 +2,7 @@ package com.CodeLab.Code_Execution_Service.service;
 
 import com.CodeLab.Code_Execution_Service.DTO.CodeExecutionResult;
 import com.CodeLab.Code_Execution_Service.DTO.TestcaseEvaluationResult;
+import com.CodeLab.Code_Execution_Service.enums.ExecutionType;
 import com.CodeLab.Code_Execution_Service.enums.Language;
 import com.CodeLab.Code_Execution_Service.enums.SubmissionStatus;
 import com.CodeLab.Code_Execution_Service.rabbitMQ.RabbitMQProducerService;
@@ -44,6 +45,7 @@ public class CodeSubmissionService {
         CodeExecutionResponseDTO responseDTO = new CodeExecutionResponseDTO();
 
         responseDTO.setSubmissionId(codeDto.getSubmissionId());
+        responseDTO.setExecutionType(codeDto.getExecutionType());
 
 
 
@@ -57,7 +59,7 @@ public class CodeSubmissionService {
             responseDTO.setTotalPassedTestcases(codeExecutionResult.getTotalPassedTestcases());
             System.out.println("Total Testcases Passed: "+codeExecutionResult.getTotalPassedTestcases());
 
-            if(codeExecutionResult.getStatus() == SubmissionStatus.ACCEPTED){
+            if(codeExecutionResult.getStatus() == SubmissionStatus.ACCEPTED && codeDto.getExecutionType() == ExecutionType.NORMAL_SUBMIT){
                 Map<String, String> complexities = analysisService.getTimeAndSpaceComplexity(codeDto.getUserCode());
                 responseDTO.setTimeComplexity(complexities.get("TC"));
                 responseDTO.setSpaceComplexity(complexities.get("SC"));
