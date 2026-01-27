@@ -244,4 +244,8 @@ public class ProblemService {
             System.out.println("Problem with id-"+problemId+" not found!!!");
         }
     }
+
+    public void getProblemByContestId(UUID contestId, User user){
+
+    }
 }

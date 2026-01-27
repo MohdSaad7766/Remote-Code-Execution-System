@@ -62,6 +62,29 @@ public interface ContestRepository extends JpaRepository<Contest, UUID> {
             @Param("user") User user
     );
 
+//    @Query("""
+//    SELECT new com.CodeLab.RCE_System.response_dto.LiveContestResponseDTO(
+//        c.id,
+//        c.title,
+//        c.description,
+//        c.startTime,
+//        c.endTime,
+//        c.duration,
+//        CASE
+//            WHEN :user IS NULL THEN false
+//            WHEN u.id IS NOT NULL THEN true
+//            ELSE false
+//        END,
+//        false,
+//        0L,
+//        false
+//    )
+//    FROM Contest c
+//    LEFT JOIN c.userList u ON u = :user
+//    WHERE c.startTime <= CURRENT_TIMESTAMP AND CURRENT_TIMESTAMP < c.endTime
+//""")
+//    Page<LiveContestResponseDTO> getAllLiveContests(Pageable pageable, @Param("user") User user);
+
     @Query("""
     SELECT new com.CodeLab.RCE_System.response_dto.LiveContestResponseDTO(
         c.id,
@@ -70,19 +93,47 @@ public interface ContestRepository extends JpaRepository<Contest, UUID> {
         c.startTime,
         c.endTime,
         c.duration,
+
+        /* userRegistered */
         CASE
             WHEN :user IS NULL THEN false
             WHEN u.id IS NOT NULL THEN true
             ELSE false
         END,
-        false,
-        0L,
-        false
+
+        /* userStartedAt */
+        cs.userStartedAt,
+
+        /* userSubmittedAt */
+        cs.userSubmittedAt,
+
+        /* contestSubmitted */
+        CASE
+            WHEN cs.userSubmittedAt IS NOT NULL THEN true
+            ELSE false
+        END
     )
     FROM Contest c
-    LEFT JOIN c.userList u ON u = :user
-    WHERE c.startTime <= CURRENT_TIMESTAMP AND CURRENT_TIMESTAMP < c.endTime
+
+    /* check registration */
+    LEFT JOIN c.userList u
+        ON u = :user
+
+    /* fetch submission if exists */
+    LEFT JOIN ContestSubmission cs
+        ON cs.contest = c
+       AND cs.user = :user
+
+    WHERE c.startTime <= CURRENT_TIMESTAMP
+      AND CURRENT_TIMESTAMP < c.endTime
 """)
-    Page<LiveContestResponseDTO> getAllLiveContests(Pageable pageable, @Param("user") User user);
+    Page<LiveContestResponseDTO> getAllLiveContests(
+            Pageable pageable,
+            @Param("user") User user
+    );
+
+
+
+
 
 }

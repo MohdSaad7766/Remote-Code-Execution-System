@@ -24,9 +24,9 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.CONFLICT, e.getMessage(), request);
     }
 
-    @ExceptionHandler(InvalidOtpException.class)
-    public ResponseEntity<Map<String, Object>> handleInvalidOtpException(InvalidOtpException e, HttpServletRequest request){
-        log.error("InvalidOtpException: ", e);
+    @ExceptionHandler({InvalidOtpException.class, ContestException.class})
+    public ResponseEntity<Map<String, Object>> handleInvalidOtpException(Exception e, HttpServletRequest request){
+//        log.error("InvalidOtpException: ", e);
         return buildErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage(), request);
     }
 

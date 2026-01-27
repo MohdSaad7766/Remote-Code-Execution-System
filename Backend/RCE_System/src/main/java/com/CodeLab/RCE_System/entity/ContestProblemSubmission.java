@@ -38,7 +38,7 @@ public class ContestProblemSubmission {
     private Language language;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "contest_id", nullable = false, updatable = false,unique = true)
+    @JoinColumn(name = "contest_id", nullable = false, updatable = false,unique = false)
     private Contest contest;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -46,6 +46,6 @@ public class ContestProblemSubmission {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "problem_id", nullable = false, updatable = false,unique = true)
+    @JoinColumn(name = "problem_id", nullable = false, updatable = false,unique = false)
     private Problem problem;
 }

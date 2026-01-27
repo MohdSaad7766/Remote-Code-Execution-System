@@ -3,20 +3,19 @@ package com.CodeLab.RCE_System.controller;
 import com.CodeLab.RCE_System.entity.Contest;
 import com.CodeLab.RCE_System.entity.User;
 import com.CodeLab.RCE_System.request_dto.ContestRequestDTO;
-import com.CodeLab.RCE_System.response_dto.GeneralMessageResponseDTO;
-import com.CodeLab.RCE_System.response_dto.LiveContestResponseDTO;
-import com.CodeLab.RCE_System.response_dto.PaginatedResponse;
-import com.CodeLab.RCE_System.response_dto.PastAndUpcomingContestResponseDTO;
+import com.CodeLab.RCE_System.response_dto.*;
 import com.CodeLab.RCE_System.service.AppUserService;
 import com.CodeLab.RCE_System.service.ContestService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -107,6 +106,30 @@ public class ContestController {
         responseDTO.setMessage("Contest Registration Successful");
 
         return ResponseEntity.ok(responseDTO);
+    }
+
+
+    @PostMapping("/user-start")
+    public void startContest(@RequestParam UUID contestId){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        String email = authentication.getName();
+        User user = appUserService.getUserByEmail(email);
+
+        contestService.startContest(contestId, user);
+
+    }
+
+
+    @GetMapping("/get-problems")
+    public ResponseEntity<List<ProblemResponseDTO>> getProblemsOfAContest(@RequestParam UUID contestId){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+
+        User user = appUserService.getUserByEmail(email);
+        List<ProblemResponseDTO> contestProblems = contestService.getProblemByContestId(contestId, user);
+
+        return ResponseEntity.ok(contestProblems);
     }
 
     private boolean hasRole(Authentication auth, String role) {

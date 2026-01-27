@@ -1,5 +1,6 @@
 package com.CodeLab.RCE_System.response_dto;
 
+import com.CodeLab.RCE_System.entity.Problem;
 import com.CodeLab.RCE_System.enums.Difficulty;
 import com.CodeLab.RCE_System.enums.UserProblemStatus;
 import lombok.AllArgsConstructor;
@@ -23,4 +24,5 @@ public class ProblemListResponseDTO {
     private UserProblemStatus problemStatus;
     private Set<String> topics;
     private Set<String> companies;
+
 }

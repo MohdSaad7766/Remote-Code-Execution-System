@@ -60,6 +60,9 @@ public class Contest {
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "contest", orphanRemoval = true)
     private List<LeaderBoardEntry> leaderBoardEntryList = new ArrayList<>();
 
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "contest", orphanRemoval = true)
+    private List<ContestSubmission> contestSubmissionList = new ArrayList<>();
+
     public static Contest fromDTO(ContestRequestDTO dto){
         Contest contest = new Contest();
         contest.setTitle(dto.getTitle());

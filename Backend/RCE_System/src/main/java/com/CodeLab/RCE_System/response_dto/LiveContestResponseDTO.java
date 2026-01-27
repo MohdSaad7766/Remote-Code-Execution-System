@@ -22,7 +22,7 @@ public class LiveContestResponseDTO {
     private long duration;
 
     private boolean userRegistered;
-    private boolean userRejoin;
-    private long remainingTimeInSeconds;
+    private LocalDateTime userStartedAt;
+    private LocalDateTime userSubmittedAt;
     private boolean contestSubmitted;
 }

@@ -77,7 +77,7 @@ public class SecurityConfig {
 
                         ).permitAll()
                         .requestMatchers("/problem/add", "/contest/add","/problem/add-company", "/problem//add-topic").hasRole("ADMIN")
-                        .requestMatchers("/contest/register").hasRole("USER")
+                        .requestMatchers("/contest/register","/contest/user-start","/contest/get-problems").hasRole("USER")
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
