@@ -1,7 +1,6 @@
 package com.CodeLab.RCE_System.service;
 
-import com.CodeLab.RCE_System.entity.ContestProblemSubmission;
-import com.CodeLab.RCE_System.entity.Submission;
+import com.CodeLab.RCE_System.entity.*;
 import com.CodeLab.RCE_System.repository.ContestProblemSubmissionRepository;
 import common.CodeExecutionResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,5 +38,9 @@ public class ContestSubmissionService {
         submissionRepository.save(submission);
 
     }
+
+//    public ContestProblemSubmission findByUserAndContestAndProblem(User user, Contest contest, Problem problem){
+//        return submissionRepository.findByUserAndContestAndProblem(user, contest, problem).orElse(null);
+//    }
 
 }

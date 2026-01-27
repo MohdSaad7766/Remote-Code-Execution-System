@@ -17,11 +17,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 
@@ -86,8 +84,7 @@ public class ContestService {
 
     @Transactional
     public void registerUserForContest(UUID contestId, User user)  {
-        Contest contest = contestRepository.findById(contestId).orElseThrow(()->
-                new ContestNotFoundException("Contest with id-"+contestId+" not found."));
+        Contest contest = getContestById(contestId);
 
         if(contest.getStartTime().isAfter(LocalDateTime.now())){
             if(contest.getUserList().contains(user)){
@@ -107,9 +104,8 @@ public class ContestService {
     }
 
     @Transactional
-    public void startContest(UUID contestId, User user){
-       Contest contest = contestRepository.findById(contestId).orElseThrow(()->
-               new ContestNotFoundException("Contest with id-"+contestId+" not found."));
+    public UUID startContest(UUID contestId, User user){
+        Contest contest = getContestById(contestId);
 
        if(!contest.getUserList().contains(user)){
            throw new ContestException("User Not Registered For the Contest.");
@@ -130,9 +126,12 @@ public class ContestService {
            if(contestSubmission.getUserSubmittedAt() != null){
                throw new ContestException("You have already submitted the contest");
            }
-//          wrong total time taken
-           long timeRemaining = LocalDateTime.now().getSecond() - contestSubmission.getUserStartedAt().getSecond();
-           contestSubmission.setTotalTimeTaken(contest.getDuration()-timeRemaining);
+
+           long timeTaken = Duration.between(
+                   contestSubmission.getUserStartedAt(),
+                   LocalDateTime.now()
+           ).toSeconds(); // or .toMinutes()
+           contestSubmission.setTotalTimeTaken(timeTaken);
            contestSubmission.setPercentage(0.0);
        }
        else{
@@ -147,11 +146,12 @@ public class ContestService {
         contest.getContestSubmissionList().add(contestSubmission);
 
         contestRepository.save(contest);
+
+        return contestSubmission.getId();
     }
 
     public List<ProblemResponseDTO> getProblemByContestId(UUID contestId, User user){
-        Contest contest = contestRepository.findById(contestId).orElseThrow(()->
-                new ContestNotFoundException("Contest with id-"+contestId+" not found."));
+        Contest contest = getContestById(contestId);
 
         if(contest.getStartTime().isAfter(LocalDateTime.now())){
             throw new ContestException("Contest Not Started yet.");
@@ -171,20 +171,10 @@ public class ContestService {
             dto.setCompanyList(null);
             dto.setSolution(null);
 
-            SubmissionStatus status =
-                    contestProblemSubmissionRepository
-                            .findStatus(user, contest, problem)
-                            .orElse(null);
+            UserProblemStatus status = contestProblemSubmissionRepository.findUserProblemStatus(user, contest, problem);
 
-            if(status == null){
-                dto.setStatus(UserProblemStatus.UNATTEMPTED);
-            }
-            else if(status == SubmissionStatus.ACCEPTED){
-                dto.setStatus(UserProblemStatus.SOLVED);
-            }
-            else{
-                dto.setStatus(UserProblemStatus.ATTEMPTED);
-            }
+
+            dto.setStatus(status);
 
             list.add(dto);
         }
@@ -194,5 +184,54 @@ public class ContestService {
     public Contest getContestById(UUID contestId){
         return contestRepository.findById(contestId).orElseThrow(()->
                 new ContestNotFoundException("Contest with id-"+contestId+" not found."));
+    }
+
+    @Transactional
+    public ContestSubmissionResponseDTO submitContest(UUID contestSubmissionId, User user){
+        ContestSubmission submission = contestSubmissionRepository.findById(contestSubmissionId).orElseThrow(()->
+                new ContestException("Invalid ContestSubmission Id-"+contestSubmissionId));
+
+        LocalDateTime now = LocalDateTime.now();
+
+        if (!submission.getUser().equals(user)) {
+            throw new ContestException("Unauthorized contest submission.");
+        }
+
+        if(submission.getUserSubmittedAt() != null){
+            throw new ContestException("You have already submitted the contest.");
+        }
+        if(submission.getContest().getEndTime().isBefore(now)){
+            throw new ContestException("Contest Ended.");
+        }
+        if(submission.getContest().getStartTime().isAfter(now)){
+            throw new ContestException("Contest has not been started yet.");
+        }
+
+        submission.setUserSubmittedAt(now);
+
+        long timeTaken = Duration.between(
+                submission.getUserStartedAt(),
+                submission.getUserSubmittedAt()
+        ).toSeconds();
+
+        submission.setTotalTimeTaken(timeTaken);
+
+       List<Double> maxPercentages = contestProblemSubmissionRepository
+               .findMaxPercentagePerProblem(user, submission.getContest());
+
+        double aggregatedPercentage = 0.0;
+
+        for(Double maxPercentage : maxPercentages){
+            if(maxPercentage != null){
+                aggregatedPercentage += maxPercentage;
+            }
+        }
+
+        int totalProblems = submission.getContest().getProblemList().size();
+
+        double avg = (totalProblems == 0) ? 0.0 : Math.min(aggregatedPercentage / totalProblems, 100.0);
+        submission.setPercentage(avg);
+
+        return ContestSubmission.toDTO(contestSubmissionRepository.save(submission));
     }
 }
