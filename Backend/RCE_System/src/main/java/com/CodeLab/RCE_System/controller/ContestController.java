@@ -110,16 +110,26 @@ public class ContestController {
 
 
     @PostMapping("/user-start")
-    public ResponseEntity<String> startContest(@RequestParam UUID contestId){
+    public ResponseEntity<ContestStartedResponseDTO> startContest(@RequestParam UUID contestId){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         String email = authentication.getName();
         User user = appUserService.getUserByEmail(email);
 
-        contestService.startContest(contestId, user);
-        return ResponseEntity.ok("User Started the Contest");
+        UUID contestSubmissionId = contestService.startContest(contestId, user);
+        return ResponseEntity.ok(new ContestStartedResponseDTO(contestSubmissionId, "User started the contest."));
+    }
 
+    @PatchMapping("/user-submit")
+    public ResponseEntity<ContestSubmissionResponseDTO> submitContest(@RequestParam UUID contestSubmissionId){
 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        String email = authentication.getName();
+        User user = appUserService.getUserByEmail(email);
+
+        ContestSubmissionResponseDTO dto = contestService.submitContest(contestSubmissionId, user);
+        return ResponseEntity.ok(dto);
     }
 
 

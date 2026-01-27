@@ -1,5 +1,6 @@
 package com.CodeLab.RCE_System.entity;
 
+import com.CodeLab.RCE_System.response_dto.ContestSubmissionResponseDTO;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -38,4 +39,14 @@ public class ContestSubmission {
     private Long totalTimeTaken;
 
     private Double percentage;
+
+    public static ContestSubmissionResponseDTO toDTO(ContestSubmission submission){
+        ContestSubmissionResponseDTO dto = new ContestSubmissionResponseDTO();
+        dto.setUserStartedAt(submission.getUserStartedAt());
+        dto.setUserSubmittedAt(submission.getUserSubmittedAt());
+        dto.setTotalTimeTaken(submission.getTotalTimeTaken());
+        dto.setPercentage(submission.getPercentage());
+
+        return dto;
+    }
 }
