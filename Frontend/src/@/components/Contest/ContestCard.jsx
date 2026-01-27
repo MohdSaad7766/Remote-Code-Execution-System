@@ -17,6 +17,8 @@ export default function ContestCard({ contestData }) {
     contest,
     userRegistered,
     userRejoin,
+    userStartedAt,
+    userSubmittedAt,
     contestSubmitted,
     userAlreadyRegistered,
     userParticipated,

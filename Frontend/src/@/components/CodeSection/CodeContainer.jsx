@@ -97,40 +97,45 @@ export default function CodeContainer({ code, onSubmit, setToggles }) {
   };
 
   const handleExecute = async () => {
-    setLoadingSubmit(true);
-    const template = code?.codeTemplates?.find((item) => item.language === selectedLanguage);
+  setLoadingSubmit(true);
+  const template = code?.codeTemplates?.find((item) => item.language === selectedLanguage);
 
-    try {
-      const response = await fetch("http://localhost:8090/submission/submit-code", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-        body: JSON.stringify({
-          problemId: code.problemId,
-          language: selectedLanguage,
-          userCode: codeValue,
-          mainCode: template?.invisibleTemplateCode || "",
-          executionType: "NORMAL_SUBMIT"
-        }),
-      });
+  try {
+    const response = await fetch("http://localhost:8090/submission/submit-code", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: JSON.stringify({
+        problemId: code.problemId,
+        contestId: null, // As requested for normal submissions
+        language: selectedLanguage,
+        userCode: codeValue,
+        mainCode: template?.invisibleTemplateCode || "",
+        executionType: "NORMAL_SUBMIT"
+      }),
+    });
 
-      if (!response.ok) throw new Error("Code submission failed");
-
-      const data = await response.json();
-
-      console.log("Code submitted successfully with id:", data.submissionId);
-
-      // ✅ Start the polling lifecycle
-      setSubmissionId(data.submissionId);
-      setPollingActive(true);
-
-    } catch (error) {
-      console.error("Execution error:", error);
-      setLoadingSubmit(false);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Code submission failed");
     }
-  };
+
+    const data = await response.json();
+
+    console.log("Code submitted successfully with id:", data.submissionId);
+
+    // ✅ Start the polling lifecycle
+    setSubmissionId(data.submissionId);
+    setPollingActive(true);
+
+  } catch (error) {
+    console.error("Execution error:", error);
+    // You might want to show a toast or alert here
+    setLoadingSubmit(false);
+  }
+};
 
   /**
    * Polling logic: 
