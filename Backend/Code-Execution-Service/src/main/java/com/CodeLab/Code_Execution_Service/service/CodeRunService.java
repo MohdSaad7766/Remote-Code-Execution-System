@@ -1,8 +1,6 @@
 package com.CodeLab.Code_Execution_Service.service;
 
-import com.CodeLab.Code_Execution_Service.DTO.CodeExecutionResult;
-import com.CodeLab.Code_Execution_Service.DTO.RunCodeRequestDTO;
-import common.CodeExecutionRequestDTO;
+import common.RunCodeRequestDTO;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Files;

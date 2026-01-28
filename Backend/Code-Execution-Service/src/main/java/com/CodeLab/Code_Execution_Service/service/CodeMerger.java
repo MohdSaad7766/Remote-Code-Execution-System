@@ -1,13 +1,15 @@
 package com.CodeLab.Code_Execution_Service.service;
 
-import com.CodeLab.Code_Execution_Service.DTO.RunCodeRequestDTO;
 import com.CodeLab.Code_Execution_Service.enums.Language;
-import common.CodeExecutionRequestDTO;
 
 import java.util.*;
 
 public class CodeMerger {
     public static String mergeCode(Language language, String mainCode, String userCode) {
+        if (mainCode == null || mainCode.isBlank()) {
+            return userCode;
+        }
+
         switch (language) {
             case JAVA:
                 return mergeJavaCode(mainCode, userCode);

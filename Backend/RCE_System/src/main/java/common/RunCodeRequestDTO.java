@@ -1,6 +1,6 @@
-package com.CodeLab.Code_Execution_Service.DTO;
+package common;
 
-import com.CodeLab.Code_Execution_Service.enums.Language;
+import com.CodeLab.RCE_System.enums.Language;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

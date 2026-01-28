@@ -9,9 +9,12 @@ import com.CodeLab.RCE_System.request_dto.CodeRequestDTO;
 import com.CodeLab.RCE_System.request_dto.SubmitCodeRequestDTO;
 import com.CodeLab.RCE_System.response_dto.SubmissionIdResponseDTO;
 import common.CodeExecutionRequestDTO;
+import common.RunCodeRequestDTO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,6 +29,7 @@ public class ExecutionService {
     private final SubmissionService submissionService;
     private final ContestSubmissionService contestSubmissionService;
     private final ContestService contestService;
+    private final RestTemplate restTemplate;
 
 
     @Autowired
@@ -34,7 +38,8 @@ public class ExecutionService {
                             RabbitMQProducerService rabbitMQProducerService,
                             SubmissionService submissionService,
                             ContestSubmissionService contestSubmissionService,
-                            ContestService contestService){
+                            ContestService contestService,
+                            RestTemplate restTemplate){
 
         this.problemService = problemService;
         this.testcaseFileService = testcaseFileService;
@@ -42,6 +47,7 @@ public class ExecutionService {
         this.submissionService = submissionService;
         this.contestSubmissionService = contestSubmissionService;
         this.contestService = contestService;
+        this.restTemplate = restTemplate;
     }
 
 
@@ -134,5 +140,18 @@ public class ExecutionService {
 
         }
         return null;
+    }
+
+    public String runCode(RunCodeRequestDTO requestBody){
+        String url = "http://localhost:8091/execute-code/run";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<RunCodeRequestDTO> httpEntity = new HttpEntity<>(requestBody,headers);
+
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, httpEntity, String.class);
+
+        return response.getBody();
     }
 }
