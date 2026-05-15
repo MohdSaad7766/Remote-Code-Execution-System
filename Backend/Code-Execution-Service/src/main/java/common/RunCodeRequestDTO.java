@@ -1,15 +1,13 @@
 package common;
 
 import com.CodeLab.Code_Execution_Service.enums.Language;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 
 public class RunCodeRequestDTO {
     private Language language;
